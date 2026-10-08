@@ -42,7 +42,9 @@ class PillButton extends StatelessWidget {
               child: Center(
                 child: Text(
                   label,
-                  style: GoogleFonts.rubik(fontSize: 22, color: Colors.white),
+                  style: Localizations.localeOf(context).languageCode == 'ar'
+                      ? GoogleFonts.notoSansArabic(fontSize: 22, color: Colors.white)
+                      : GoogleFonts.rubik(fontSize: 22, color: Colors.white),
                 ),
               ),
             ),

@@ -23,7 +23,7 @@ class LanguageToggle extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 5.25, sigmaY: 5.25),
         child: Container(
           height: 56,
-          padding: const EdgeInsets.only(right: 4, top: 4, bottom: 4),
+          padding: const EdgeInsetsDirectional.only(end: 4, top: 4, bottom: 4),
           decoration: BoxDecoration(
             color: const Color(0x8F2D1C10),
             borderRadius: radius,
