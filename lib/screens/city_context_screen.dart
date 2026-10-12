@@ -8,6 +8,7 @@ import '../widgets/glass_icon_button.dart';
 import '../widgets/language_toggle.dart';
 import '../widgets/map_pin.dart';
 import '../widgets/overlay_background.dart';
+import 'masterplan_screen.dart';
 
 /// Satellite map of Riyadh showing the project site and nearby landmarks.
 /// Opened from [InitialScreen]'s "Start Journey"; the back button pops to it.
@@ -36,7 +37,14 @@ class CityContextScreen extends StatelessWidget {
             clipBehavior: Clip.hardEdge,
             child: SizedBox.fromSize(
               size: _canvas,
-              child: _MapCanvas(strings: strings),
+              child: _MapCanvas(
+                strings: strings,
+                onProjectTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => MasterplanScreen(onLocaleChanged: onLocaleChanged),
+                  ),
+                ),
+              ),
             ),
           ),
           SafeArea(
@@ -72,9 +80,10 @@ class CityContextScreen extends StatelessWidget {
 }
 
 class _MapCanvas extends StatelessWidget {
-  const _MapCanvas({required this.strings});
+  const _MapCanvas({required this.strings, required this.onProjectTap});
 
   final AppStrings strings;
+  final VoidCallback onProjectTap;
 
   static const _assets = CityContextScreen._assets;
 
@@ -99,7 +108,7 @@ class _MapCanvas extends StatelessWidget {
             height: 251.047,
             child: Image.asset('$_assets/site_polygon.png', fit: BoxFit.fill),
           ),
-          const _ProjectCallout(),
+          _ProjectCallout(onTap: onProjectTap),
           MapPin(
             markerLeft: 896, markerTop: 144, labelWidth: 178,
             label: strings.kingSalmanAirport, isArabic: isArabic,
@@ -170,7 +179,10 @@ class _MapCanvas extends StatelessWidget {
 
 /// Callout linking the site polygon to the project logo card.
 class _ProjectCallout extends StatelessWidget {
-  const _ProjectCallout();
+  const _ProjectCallout({required this.onTap});
+
+  /// Tapping the logo card opens the masterplan.
+  final VoidCallback onTap;
 
   static const _assets = CityContextScreen._assets;
 
@@ -196,15 +208,18 @@ class _ProjectCallout extends StatelessWidget {
         Positioned(
           left: 1481,
           top: 198,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(24, 14, 22, 14),
-            decoration: BoxDecoration(
-              color: AppColors.calloutCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0x29FFFFFF)),
-              boxShadow: const [BoxShadow(color: Color(0x3D000000), blurRadius: 6)],
+          child: GestureDetector(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(24, 14, 22, 14),
+              decoration: BoxDecoration(
+                color: AppColors.calloutCard,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0x29FFFFFF)),
+                boxShadow: const [BoxShadow(color: Color(0x3D000000), blurRadius: 6)],
+              ),
+              child: const _ProjectLogo(),
             ),
-            child: const _ProjectLogo(),
           ),
         ),
       ],

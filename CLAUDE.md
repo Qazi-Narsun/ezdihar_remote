@@ -20,8 +20,14 @@ Flutter app implementing the Figma file
   `lib/theme/app_colors.dart` colour tokens. `lib/l10n/app_strings.dart` strings.
 - Reusable: `OverlayBackground` (image + tint/gradient), `PillButton`,
   `LanguageToggle`, `GlassIconButton`, `BrandTitle`, `MapPin`.
-- Flow: `InitialScreen` -> (Start Journey, `Navigator.push`) -> `CityContextScreen`;
-  back button pops.
+- Flow: `InitialScreen` -> (Start Journey, `Navigator.push`) -> `CityContextScreen`
+  -> (tap project logo card) -> `MasterplanScreen`; back button pops.
+- `MasterplanScreen` (Figma 24:1403 + Filters 49:5630 + Gallery 49:6205): bottom nav
+  = rotate-left / Filters|Gallery tabs / rotate-right. Tabs are mutually exclusive
+  panel toggles (tap active tab or X closes). Rotate buttons slide the zoomed
+  aerial image (placeholder for 360 frames); reset button (bottom-end) restores
+  the view and closes the panel. Filter state is held locally (no unit data yet).
+  Assets in `assets/images/masterplan/`.
 
 ## Rules
 - Reuse existing widgets/tokens; extend them (new optional param) instead of duplicating.

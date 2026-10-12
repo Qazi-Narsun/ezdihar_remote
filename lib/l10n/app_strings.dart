@@ -25,6 +25,19 @@ class AppStrings {
     'kingSalmanAirport': 'King Salman International Airport',
     'imamUniversity': 'Imam Muhammad Ibn Saud Islamic University',
     'expo2030': 'Expo 2030 Riyadh',
+    'filters': 'Filters',
+    'filtersSubtitle': 'Refine your search to discover the project property',
+    'gallery': 'Gallery',
+    'floor': 'Floor',
+    'surface': 'Surface',
+    'sqm': 'sqm',
+    'availability': 'Availability',
+    'hideUnavailableUnits': 'Hide unavailable units',
+    'buildingType': 'Building Type',
+    'close': 'Close',
+    'rotateLeft': 'Rotate left',
+    'rotateRight': 'Rotate right',
+    'resetView': 'Reset view',
   };
 
   static const _ar = {
@@ -41,6 +54,19 @@ class AppStrings {
     'kingSalmanAirport': 'مطار الملك سلمان الدولي',
     'imamUniversity': 'جامعة الإمام محمد بن سعود الإسلامية',
     'expo2030': 'إكسبو 2030 الرياض',
+    'filters': 'التصفية',
+    'filtersSubtitle': 'حدّد بحثك لاكتشاف العقار المناسب في المشروع',
+    'gallery': 'المعرض',
+    'floor': 'الطابق',
+    'surface': 'المساحة',
+    'sqm': 'م²',
+    'availability': 'التوفر',
+    'hideUnavailableUnits': 'إخفاء الوحدات غير المتاحة',
+    'buildingType': 'نوع المبنى',
+    'close': 'إغلاق',
+    'rotateLeft': 'تدوير لليسار',
+    'rotateRight': 'تدوير لليمين',
+    'resetView': 'إعادة ضبط العرض',
   };
 
   static AppStrings of(BuildContext context) =>
@@ -61,6 +87,19 @@ class AppStrings {
   String get kingSalmanAirport => _values['kingSalmanAirport']!;
   String get imamUniversity => _values['imamUniversity']!;
   String get expo2030 => _values['expo2030']!;
+  String get filters => _values['filters']!;
+  String get filtersSubtitle => _values['filtersSubtitle']!;
+  String get gallery => _values['gallery']!;
+  String get floor => _values['floor']!;
+  String get surface => _values['surface']!;
+  String get sqm => _values['sqm']!;
+  String get availability => _values['availability']!;
+  String get hideUnavailableUnits => _values['hideUnavailableUnits']!;
+  String get buildingType => _values['buildingType']!;
+  String get close => _values['close']!;
+  String get rotateLeft => _values['rotateLeft']!;
+  String get rotateRight => _values['rotateRight']!;
+  String get resetView => _values['resetView']!;
 }
 
 class _AppStringsDelegate extends LocalizationsDelegate<AppStrings> {
