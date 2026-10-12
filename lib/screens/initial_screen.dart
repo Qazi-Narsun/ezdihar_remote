@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../l10n/app_strings.dart';
 import '../widgets/brand_title.dart';
+import 'city_context_screen.dart';
 import '../widgets/language_toggle.dart';
 import '../widgets/overlay_background.dart';
 import '../widgets/pill_button.dart';
@@ -56,7 +57,15 @@ class InitialScreen extends StatelessWidget {
                       isArabic: strings.isArabic,
                     ),
                     const SizedBox(height: 40),
-                    PillButton(label: strings.startJourney, onPressed: () {}),
+                    PillButton(
+                      label: strings.startJourney,
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              CityContextScreen(onLocaleChanged: onLocaleChanged),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

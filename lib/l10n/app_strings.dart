@@ -13,14 +13,34 @@ class AppStrings {
 
   static const _en = {
     'brandName': 'MASHAEL AL FURSAN',
+    'projectName': 'Mashael\nAlfursan',
     'tagline': 'Discover a New Way of Living',
     'startJourney': 'Start Journey',
+    'back': 'Back',
+    'horseRacingTrack': 'Horse Racing Track',
+    'kingKhalidAirport': 'King Khalid International Airport',
+    'khuzamDistrict': 'Khuzam District',
+    'equestrianClub': 'Equestrian Club',
+    'princessNourahUniversity': 'Princess Nourah Bint Abdulrahman University ',
+    'kingSalmanAirport': 'King Salman International Airport',
+    'imamUniversity': 'Imam Muhammad Ibn Saud Islamic University',
+    'expo2030': 'Expo 2030 Riyadh',
   };
 
   static const _ar = {
     'brandName': 'مشاعل الفرسان',
+    'projectName': 'مشاعل\nالفرسان',
     'tagline': 'اكتشف طريقة جديدة للعيش',
     'startJourney': 'ابدأ الرحلة',
+    'back': 'رجوع',
+    'horseRacingTrack': 'مضمار سباق الخيل',
+    'kingKhalidAirport': 'مطار الملك خالد الدولي',
+    'khuzamDistrict': 'حي خزام',
+    'equestrianClub': 'نادي الفروسية',
+    'princessNourahUniversity': 'جامعة الأميرة نورة بنت عبدالرحمن',
+    'kingSalmanAirport': 'مطار الملك سلمان الدولي',
+    'imamUniversity': 'جامعة الإمام محمد بن سعود الإسلامية',
+    'expo2030': 'إكسبو 2030 الرياض',
   };
 
   static AppStrings of(BuildContext context) =>
@@ -29,8 +49,18 @@ class AppStrings {
   bool get isArabic => locale.languageCode == 'ar';
 
   String get brandName => _values['brandName']!;
+  String get projectName => _values['projectName']!;
   String get tagline => _values['tagline']!;
   String get startJourney => _values['startJourney']!;
+  String get back => _values['back']!;
+  String get horseRacingTrack => _values['horseRacingTrack']!;
+  String get kingKhalidAirport => _values['kingKhalidAirport']!;
+  String get khuzamDistrict => _values['khuzamDistrict']!;
+  String get equestrianClub => _values['equestrianClub']!;
+  String get princessNourahUniversity => _values['princessNourahUniversity']!;
+  String get kingSalmanAirport => _values['kingSalmanAirport']!;
+  String get imamUniversity => _values['imamUniversity']!;
+  String get expo2030 => _values['expo2030']!;
 }
 
 class _AppStringsDelegate extends LocalizationsDelegate<AppStrings> {

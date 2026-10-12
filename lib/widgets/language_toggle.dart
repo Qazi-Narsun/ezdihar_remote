@@ -16,24 +16,24 @@ class LanguageToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(122);
+    final radius = BorderRadius.circular(56);
     return ClipRRect(
       borderRadius: radius,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5.25, sigmaY: 5.25),
         child: Container(
           height: 56,
-          padding: const EdgeInsetsDirectional.only(end: 4, top: 4, bottom: 4),
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: const Color(0x8F2D1C10),
+            color: AppColors.glass,
             borderRadius: radius,
-            border: Border.all(color: const Color(0x3DFFFFFF), width: 0.48),
+            border: Border.all(color: AppColors.glassBorder, width: 0.48),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _Segment(
-                radius: 65.26,
+                radius: 48,
                 selected: selected == AppLanguage.english,
                 onTap: () => onChanged(AppLanguage.english),
                 child: Text(
@@ -42,13 +42,13 @@ class LanguageToggle extends StatelessWidget {
                 ),
               ),
               _Segment(
-                radius: 118,
+                radius: 48,
                 selected: selected == AppLanguage.arabic,
                 onTap: () => onChanged(AppLanguage.arabic),
                 child: Text(
                   'العربية',
                   textDirection: TextDirection.rtl,
-                  style: GoogleFonts.notoSansArabic(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0.24),
+                  style: GoogleFonts.notoSansArabic(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0.24, height: 1),
                 ),
               ),
             ],
@@ -76,7 +76,7 @@ class _Segment extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: borderRadius,
-        child: Container(constraints: const BoxConstraints(minHeight: 34), alignment: Alignment.center, padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 12), child: child),
+        child: Container(height: 48, alignment: Alignment.center, padding: const EdgeInsets.symmetric(horizontal: 24), child: child),
       ),
     );
   }
