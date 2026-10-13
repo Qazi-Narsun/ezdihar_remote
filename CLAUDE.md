@@ -4,6 +4,11 @@ Flutter app implementing the Figma file
 `7U3uK1v7FRA0dMmKdOSF97` (Ezdihar _ Mashael Al Fursan). Designs are authored on a
 1920x1081 canvas (landscape tablet/desktop), Arabic (RTL) is the default locale.
 
+**Target device:** Android tablet, 1920x1200 (16:10), landscape only, fullscreen. `main()` locks
+landscape + `SystemUiMode.immersiveSticky`; the manifest uses `sensorLandscape`. Figma canvases
+(1920x1081) are scaled with `BoxFit.cover`, so ~5% of the canvas width is cropped per side at 16:10:
+keep important content inside x = 100..1820 of the canvas.
+
 ## Workflow: Figma -> Flutter
 1. Load the `figma:figma-design-to-code` skill, then `create_session` (fileKey) and
    `get_design_context` (nodeId with `-` -> `:`, `skillNames: figma-design-to-code`).

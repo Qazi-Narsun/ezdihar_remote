@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'l10n/app_strings.dart';
 import 'l10n/locale_controller.dart';
 import 'screens/initial_screen.dart';
+import 'widgets/directional_page_transitions.dart';
 import 'widgets/idle_reset.dart';
 import 'widgets/locale_fade.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Kiosk tablet (1920x1200, landscape): hide status + navigation bars.
+  await SystemChrome.setPreferredOrientations(const [
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   runApp(MyApp(localeController: await LocaleController.load()));
 }
 
@@ -39,6 +47,13 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        pageTransitionsTheme: const PageTransitionsTheme(builders: {
+          TargetPlatform.android: DirectionalPageTransitionsBuilder(),
+          TargetPlatform.windows: DirectionalPageTransitionsBuilder(),
+          TargetPlatform.iOS: DirectionalPageTransitionsBuilder(),
+          TargetPlatform.linux: DirectionalPageTransitionsBuilder(),
+          TargetPlatform.macOS: DirectionalPageTransitionsBuilder(),
+        }),
       ),
       // The locale drives text direction: ar -> RTL, en -> LTR.
       locale: locale,
