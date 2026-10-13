@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../data/building_data.dart';
 import '../l10n/app_strings.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/language_toggle.dart';
+import '../widgets/rotating_view.dart';
+import 'building_detail_screen.dart';
 
 /// Which panel the bottom navigation currently has open above the map.
 enum _MasterplanPanel { filters, gallery }
@@ -48,16 +51,71 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
   static const _floorBounds = RangeValues(3, 26);
   static const _surfaceBounds = RangeValues(141, 400);
 
+  List<BuildingType> _types = const [];
+
+  /// Centres of the buildings along the upper lane, left to right, on the
+  /// 2000x1147 aerial photo.
+  static const _laneCentres = [
+    Offset(5, 440), Offset(35, 370), Offset(125, 350), Offset(210, 325),
+    Offset(320, 310), Offset(410, 325), Offset(495, 305), Offset(600, 300),
+    Offset(690, 315), Offset(770, 305), Offset(890, 310), Offset(950, 345),
+    Offset(1160, 345), Offset(1230, 300), Offset(1335, 295), Offset(1430, 310),
+    Offset(1515, 295), Offset(1620, 295), Offset(1720, 300), Offset(1795, 285),
+    Offset(1905, 285), Offset(1990, 295),
+  ];
+
+  /// Lane slots taken by the two large corner buildings (type C). The rest
+  /// are type A first, then type B, in lane order. Placeholder until the real
+  /// building-to-slot mapping is provided.
+  static const _typeCSlots = {10, 13};
+
+  @override
+  void initState() {
+    super.initState();
+    BuildingType.loadAll().then((types) {
+      if (mounted) setState(() => _types = types);
+    });
+  }
+
+  List<_BuildingSpot> _spots() {
+    if (_types.isEmpty) return const [];
+    final queues = {
+      for (final t in _types) t.type: (type: t, ids: t.buildingIds.iterator),
+    };
+    BuildingType? next(String letter) {
+      final q = queues[letter];
+      return q != null && q.ids.moveNext() ? q.type : null;
+    }
+
+    final spots = <_BuildingSpot>[];
+    var aLeft = queues['A']?.type.buildingCount ?? 0;
+    for (var i = 0; i < _laneCentres.length; i++) {
+      final letter = _typeCSlots.contains(i) ? 'C' : (aLeft-- > 0 ? 'A' : 'B');
+      final type = next(letter);
+      if (type == null) continue;
+      spots.add(_BuildingSpot(_laneCentres[i], type, queues[letter]!.ids.current));
+    }
+    return spots;
+  }
+
+  void _openBuilding(BuildingType type, String id) => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => BuildingDetailScreen(
+            type: type,
+            buildingId: id,
+            onLocaleChanged: widget.onLocaleChanged,
+          ),
+        ),
+      );
+
   void _togglePanel(_MasterplanPanel panel) =>
       setState(() => _panel = _panel == panel ? null : panel);
 
   void _rotate(int delta) =>
       setState(() => _turns = (_turns + delta).clamp(-_maxTurns, _maxTurns));
 
-  void _reset() => setState(() {
-        _turns = 0;
-        _panel = null;
-      });
+  /// Restart: clear the stack and return to the first page.
+  void _reset() => Navigator.of(context).popUntil((route) => route.isFirst);
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +125,11 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          _RotatingMap(turns: _turns, maxTurns: _maxTurns),
+          RotatingView(
+            turns: _turns,
+            maxTurns: _maxTurns,
+            child: _MapCanvas(buildings: _spots(), onSelect: _openBuilding),
+          ),
           SafeArea(
             minimum: const EdgeInsets.all(32),
             child: Stack(
@@ -336,41 +398,77 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
       _text(strings, 16, FontWeight.w600, color: Colors.white.withValues(alpha: 0.64), spacing: -0.16);
 }
 
-/// Full-bleed aerial image. Each rotate step slides a slightly zoomed-in copy
-/// sideways, which stands in for turning the view until real 360 frames exist.
-class _RotatingMap extends StatelessWidget {
-  const _RotatingMap({required this.turns, required this.maxTurns});
+/// The aerial photo with one box button per building of the upper lane. Laid
+/// out on the photo's own pixel grid so the buttons stay on their buildings.
+class _MapCanvas extends StatelessWidget {
+  const _MapCanvas({required this.buildings, required this.onSelect});
 
-  final int turns;
-  final int maxTurns;
+  final List<_BuildingSpot> buildings;
+  final void Function(BuildingType type, String id) onSelect;
 
-  static const _zoom = 1.2;
+  static const _size = Size(2000, 1147);
+  static const _button = 44.0;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Slack created by the zoom, split evenly across +/- maxTurns.
-        final slack = constraints.maxWidth * (_zoom - 1) / 2;
-        final dx = -slack * turns / maxTurns;
-        return ClipRect(
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(end: dx),
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeInOut,
-            builder: (context, value, child) => Transform.translate(
-              offset: Offset(value, 0),
-              child: Transform.scale(scale: _zoom, child: child),
+    return FittedBox(
+      fit: BoxFit.cover,
+      clipBehavior: Clip.hardEdge,
+      child: SizedBox.fromSize(
+        size: _size,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset('assets/images/masterplan/background.png', fit: BoxFit.cover),
             ),
-            child: Image.asset(
-              'assets/images/masterplan/background.png',
-              fit: BoxFit.cover,
-              width: constraints.maxWidth,
-              height: constraints.maxHeight,
-            ),
+            for (final b in buildings)
+              Positioned(
+                left: b.center.dx - _button / 2,
+                top: b.center.dy - _button / 2,
+                width: _button,
+                height: _button,
+                child: _BuildingButton(label: b.id, onTap: () => onSelect(b.type, b.id)),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BuildingSpot {
+  const _BuildingSpot(this.center, this.type, this.id);
+
+  final Offset center;
+  final BuildingType type;
+  final String id;
+}
+
+class _BuildingButton extends StatelessWidget {
+  const _BuildingButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(8);
+    return Material(
+      color: AppColors.glass,
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: const BorderSide(color: AppColors.accent, width: 2),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.rubik(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

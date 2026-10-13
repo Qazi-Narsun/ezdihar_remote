@@ -12,12 +12,17 @@ class GlassIconButton extends StatelessWidget {
     required this.onPressed,
     this.size = 56,
     this.tooltip,
+    this.padding,
   });
 
   final Widget child;
   final VoidCallback? onPressed;
   final double size;
   final String? tooltip;
+
+  /// When set, the button is [size] tall and as wide as [child] plus this
+  /// horizontal padding (a pill, e.g. icon + label) instead of a square.
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +42,15 @@ class GlassIconButton extends StatelessWidget {
             child: InkWell(
               onTap: onPressed,
               borderRadius: radius,
-              child: SizedBox(width: size, height: size, child: Center(child: child)),
+              child: padding == null
+                  ? SizedBox(width: size, height: size, child: Center(child: child))
+                  : SizedBox(
+                      height: size,
+                      child: Padding(
+                        padding: padding!,
+                        child: Center(widthFactor: 1, child: child),
+                      ),
+                    ),
             ),
           ),
         ),

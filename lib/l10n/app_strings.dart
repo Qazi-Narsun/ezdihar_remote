@@ -38,6 +38,33 @@ class AppStrings {
     'rotateLeft': 'Rotate left',
     'rotateRight': 'Rotate right',
     'resetView': 'Reset view',
+    'buildingTypeTitle': 'Building Type {type}',
+    'buildingNo': 'Building no.',
+    'floors': 'Floors',
+    'numberOfApartments': 'Numbers of Apartment',
+    'apartmentType': 'Apartment Type',
+    'totalArea': 'Total Area',
+    'areaUnit': 'M²',
+    'restart': 'Restart',
+    'buildingInfo': 'Building info',
+    'floorDetails': 'Floor Details',
+    'apartments': 'Apartments',
+    'selectApartment': 'Select your preferred apartment to start tour',
+    'apartmentDetails': 'Apartment Details',
+    'type': 'Type',
+    'brochure': 'Brochure',
+    'registerInterest': 'Register Interest',
+    'yourInformation': 'Your Information',
+    'yourName': 'Your Name',
+    'yourNameHint': 'Faisal Al Saud',
+    'emailAddress': 'Email Address',
+    'emailHint': 'faisal.saud@email.com',
+    'contactNumber': 'Contact Number',
+    'phoneHint': 'Type here...',
+    'interestRegistered': 'Interest Registered!',
+    'interestRegisteredBody':
+        'Thank you for expressing your interest. Our team will contact you via phone or email with the next steps.',
+    'restartExperience': 'Restart Experience',
   };
 
   static const _ar = {
@@ -67,6 +94,33 @@ class AppStrings {
     'rotateLeft': 'تدوير لليسار',
     'rotateRight': 'تدوير لليمين',
     'resetView': 'إعادة ضبط العرض',
+    'buildingTypeTitle': 'نوع المبنى {type}',
+    'buildingNo': 'رقم المبنى',
+    'floors': 'الطوابق',
+    'numberOfApartments': 'عدد الشقق',
+    'apartmentType': 'نوع الشقة',
+    'totalArea': 'المساحة الإجمالية',
+    'areaUnit': 'م²',
+    'restart': 'إعادة',
+    'buildingInfo': 'معلومات المبنى',
+    'floorDetails': 'تفاصيل الطابق',
+    'apartments': 'الشقق',
+    'selectApartment': 'اختر الشقة المفضلة لديك لبدء الجولة',
+    'apartmentDetails': 'تفاصيل الشقة',
+    'type': 'النوع',
+    'brochure': 'الكتيب',
+    'registerInterest': 'سجل اهتمامك',
+    'yourInformation': 'معلوماتك',
+    'yourName': 'الاسم',
+    'yourNameHint': 'فيصل آل سعود',
+    'emailAddress': 'البريد الإلكتروني',
+    'emailHint': 'faisal.saud@email.com',
+    'contactNumber': 'رقم التواصل',
+    'phoneHint': 'اكتب هنا...',
+    'interestRegistered': 'تم تسجيل اهتمامك!',
+    'interestRegisteredBody':
+        'شكراً لإبداء اهتمامك. سيتواصل معك فريقنا عبر الهاتف أو البريد الإلكتروني لإبلاغك بالخطوات التالية.',
+    'restartExperience': 'إعادة التجربة',
   };
 
   static AppStrings of(BuildContext context) =>
@@ -100,6 +154,32 @@ class AppStrings {
   String get rotateLeft => _values['rotateLeft']!;
   String get rotateRight => _values['rotateRight']!;
   String get resetView => _values['resetView']!;
+  String get buildingNo => _values['buildingNo']!;
+  String get floors => _values['floors']!;
+  String get numberOfApartments => _values['numberOfApartments']!;
+  String get apartmentType => _values['apartmentType']!;
+  String get totalArea => _values['totalArea']!;
+  String get areaUnit => _values['areaUnit']!;
+  String get restart => _values['restart']!;
+  String get buildingInfo => _values['buildingInfo']!;
+  String get floorDetails => _values['floorDetails']!;
+  String get apartments => _values['apartments']!;
+  String get selectApartment => _values['selectApartment']!;
+  String get apartmentDetails => _values['apartmentDetails']!;
+  String get type => _values['type']!;
+  String get brochure => _values['brochure']!;
+  String get registerInterest => _values['registerInterest']!;
+  String get yourInformation => _values['yourInformation']!;
+  String get yourName => _values['yourName']!;
+  String get yourNameHint => _values['yourNameHint']!;
+  String get emailAddress => _values['emailAddress']!;
+  String get emailHint => _values['emailHint']!;
+  String get contactNumber => _values['contactNumber']!;
+  String get phoneHint => _values['phoneHint']!;
+  String get interestRegistered => _values['interestRegistered']!;
+  String get interestRegisteredBody => _values['interestRegisteredBody']!;
+  String get restartExperience => _values['restartExperience']!;
+  String buildingTypeTitle(String type) => _values['buildingTypeTitle']!.replaceAll('{type}', type);
 }
 
 class _AppStringsDelegate extends LocalizationsDelegate<AppStrings> {

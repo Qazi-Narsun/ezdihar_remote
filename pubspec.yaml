@@ -67,6 +67,10 @@ flutter:
     - assets/images/
     - assets/images/city/
     - assets/images/masterplan/
+    - assets/images/building/
+    - assets/images/apartments/
+    - assets/images/register/
+    - assets/data/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

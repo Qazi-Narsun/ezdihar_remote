@@ -1,0 +1,30 @@
+{
+  "title": "Building Details",
+  "note": "Details are the same for all buildings within a type. Apartments are split as evenly as possible across floors; any remainder goes to the lowest floors.",
+  "buildingTypes": [
+    {
+      "type": "A",
+      "buildingCount": 5,
+      "apartmentsPerBuilding": 47,
+      "apartmentTypes": ["1BR", "2BR", "3BR", "4BR"],
+      "totalArea": { "value": 7157.75, "unit": "m2" },
+      "floors": 7
+    },
+    {
+      "type": "B",
+      "buildingCount": 15,
+      "apartmentsPerBuilding": 41,
+      "apartmentTypes": ["2BR", "3BR", "4BR"],
+      "totalArea": { "value": 6460.57, "unit": "m2" },
+      "floors": 7
+    },
+    {
+      "type": "C",
+      "buildingCount": 2,
+      "apartmentsPerBuilding": 90,
+      "apartmentTypes": ["1BR", "2BR", "3BR"],
+      "totalArea": { "value": 12605.20, "unit": "m2" },
+      "floors": 7
+    }
+  ]
+}
