@@ -2,24 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'l10n/app_strings.dart';
+import 'l10n/locale_controller.dart';
 import 'screens/initial_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp(localeController: await LocaleController.load()));
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key, required this.localeController});
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  Locale _locale = const Locale('ar');
+  final LocaleController localeController;
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: localeController,
+      builder: (context, _) => _buildApp(),
+    );
+  }
+
+  Widget _buildApp() {
+    final locale = localeController.locale;
     return MaterialApp(
       title: 'Ezdihar Remote',
       theme: ThemeData(
@@ -27,7 +32,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       // The locale drives text direction: ar -> RTL, en -> LTR.
-      locale: _locale,
+      locale: locale,
       supportedLocales: AppStrings.supportedLocales,
       localizationsDelegates: const [
         AppStrings.delegate,
@@ -36,8 +41,8 @@ class _MyAppState extends State<MyApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       home: InitialScreen(
-        locale: _locale,
-        onLocaleChanged: (locale) => setState(() => _locale = locale),
+        locale: locale,
+        onLocaleChanged: localeController.setLocale,
       ),
       debugShowCheckedModeBanner: false,
     );

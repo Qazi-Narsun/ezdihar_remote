@@ -40,6 +40,9 @@ Flutter app implementing the Figma file
 - Fixed-canvas screens (maps): lay out on the Figma canvas inside
   `FittedBox(cover)`, keep header/controls outside it in a `SafeArea`.
 - New asset folders must be listed in `pubspec.yaml` (`assets/images/` is not recursive).
+- Language is app-level state: `LocaleController` (`lib/l10n/locale_controller.dart`)
+  is loaded in `main()` and persists the choice via `shared_preferences` (default `ar`).
+  Change language only through it (`setLocale`), never with local state.
 - Pushed routes get `onLocaleChanged` only; read the current locale from
   `AppStrings.of(context)`, never from a stale constructor value.
 - Run `flutter analyze` before finishing.
