@@ -4,11 +4,15 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_strings.dart';
 import 'l10n/locale_controller.dart';
 import 'screens/initial_screen.dart';
+import 'widgets/idle_reset.dart';
+import 'widgets/locale_fade.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp(localeController: await LocaleController.load()));
 }
+
+final _navigatorKey = GlobalKey<NavigatorState>();
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key, required this.localeController});
@@ -26,6 +30,11 @@ class MyApp extends StatelessWidget {
   Widget _buildApp() {
     final locale = localeController.locale;
     return MaterialApp(
+      navigatorKey: _navigatorKey,
+      builder: (context, child) => LocaleFade(
+        locale: locale,
+        child: IdleReset(navigatorKey: _navigatorKey, child: child!),
+      ),
       title: 'Ezdihar Remote',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),

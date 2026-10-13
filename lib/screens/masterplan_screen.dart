@@ -1,15 +1,22 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../data/building_data.dart';
 import '../l10n/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../widgets/fade_in_asset.dart';
+import '../widgets/fit_panel.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/language_toggle.dart';
+import '../widgets/panel_close_button.dart';
+import '../widgets/restart_dialog.dart';
 import '../widgets/rotating_view.dart';
+import '../widgets/status_chip.dart';
 import 'building_detail_screen.dart';
 
 /// Which panel the bottom navigation currently has open above the map.
@@ -52,6 +59,12 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
   static const _surfaceBounds = RangeValues(141, 400);
 
   List<BuildingType> _types = const [];
+  bool _loadFailed = false;
+
+  /// "Tap a building" hint (and the pulse on the buttons); dropped on the
+  /// first interaction or after a few seconds.
+  bool _hintVisible = true;
+  Timer? _hintTimer;
 
   /// Centres of the buildings along the upper lane, left to right, on the
   /// 2000x1147 aerial photo.
@@ -72,10 +85,52 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
   @override
   void initState() {
     super.initState();
+    _load();
+    _hintTimer = Timer(const Duration(seconds: 12), _dismissHint);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Warm up the next screen's photo so it does not pop in.
+    precacheImage(const AssetImage('assets/images/building/exterior.jpg'), context);
+  }
+
+  @override
+  void dispose() {
+    _hintTimer?.cancel();
+    super.dispose();
+  }
+
+  void _load() {
+    setState(() => _loadFailed = false);
     BuildingType.loadAll().then((types) {
       if (mounted) setState(() => _types = types);
+    }).catchError((Object _) {
+      if (mounted) setState(() => _loadFailed = true);
     });
   }
+
+  void _dismissHint() {
+    _hintTimer?.cancel();
+    if (_hintVisible && mounted) setState(() => _hintVisible = false);
+  }
+
+  /// Building types and floor range are the filters that apply to a building;
+  /// surface and availability need per-unit data that does not exist yet.
+  bool get _filtersActive => _buildingTypes.isNotEmpty || _floors != _floorBounds;
+
+  bool _matches(BuildingType t) =>
+      (_buildingTypes.isEmpty || _buildingTypes.contains(t.type)) &&
+      t.floors >= _floors.start &&
+      t.floors <= _floors.end;
+
+  void _clearFilters() => setState(() {
+        _floors = _floorBounds;
+        _surface = _surfaceBounds;
+        _hideUnavailable = false;
+        _buildingTypes.clear();
+      });
 
   List<_BuildingSpot> _spots() {
     if (_types.isEmpty) return const [];
@@ -93,47 +148,88 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
       final letter = _typeCSlots.contains(i) ? 'C' : (aLeft-- > 0 ? 'A' : 'B');
       final type = next(letter);
       if (type == null) continue;
-      spots.add(_BuildingSpot(_laneCentres[i], type, queues[letter]!.ids.current));
+      spots.add(_BuildingSpot(
+        _laneCentres[i],
+        type,
+        queues[letter]!.ids.current,
+        matched: _matches(type),
+      ));
     }
     return spots;
   }
 
-  void _openBuilding(BuildingType type, String id) => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => BuildingDetailScreen(
-            type: type,
-            buildingId: id,
-            onLocaleChanged: widget.onLocaleChanged,
-          ),
+  void _openBuilding(BuildingType type, String id) {
+    _dismissHint();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BuildingDetailScreen(
+          type: type,
+          buildingId: id,
+          onLocaleChanged: widget.onLocaleChanged,
         ),
-      );
+      ),
+    );
+  }
 
-  void _togglePanel(_MasterplanPanel panel) =>
-      setState(() => _panel = _panel == panel ? null : panel);
+  void _togglePanel(_MasterplanPanel panel) {
+    _dismissHint();
+    setState(() => _panel = _panel == panel ? null : panel);
+  }
 
-  void _rotate(int delta) =>
-      setState(() => _turns = (_turns + delta).clamp(-_maxTurns, _maxTurns));
+  void _rotate(int delta) {
+    _dismissHint();
+    setState(() => _turns = (_turns + delta).clamp(-_maxTurns, _maxTurns));
+  }
 
-  /// Restart: clear the stack and return to the first page.
-  void _reset() => Navigator.of(context).popUntil((route) => route.isFirst);
+  /// Restart: confirm, then clear the stack and return to the first page.
+  void _reset() => confirmRestart(context);
 
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
     final isArabic = strings.isArabic;
-    return Scaffold(
+    final spots = _spots();
+    final matchCount = spots.where((s) => s.matched).length;
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _rotate(-1),
+        const SingleActivator(LogicalKeyboardKey.arrowRight): () => _rotate(1),
+        const SingleActivator(LogicalKeyboardKey.escape): () => setState(() => _panel = null),
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
           RotatingView(
             turns: _turns,
             maxTurns: _maxTurns,
-            child: _MapCanvas(buildings: _spots(), onSelect: _openBuilding),
+            onStep: _rotate,
+            child: _MapCanvas(
+              buildings: spots,
+              onSelect: _openBuilding,
+              pulse: _hintVisible && !_filtersActive,
+            ),
           ),
           SafeArea(
             minimum: const EdgeInsets.all(32),
             child: Stack(
               children: [
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 72),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: _statusChip(
+                        strings,
+                        matchCount: matchCount,
+                        total: spots.length,
+                      ),
+                    ),
+                  ),
+                ),
                 Align(
                   alignment: Alignment.topCenter,
                   child: Row(
@@ -166,8 +262,8 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                         curve: Curves.easeOut,
                         alignment: Alignment.bottomCenter,
                         child: switch (_panel) {
-                          _MasterplanPanel.filters => _buildFilters(strings),
-                          _MasterplanPanel.gallery => _buildGallery(strings),
+                          _MasterplanPanel.filters => FitPanel(child: _buildFilters(strings)),
+                          _MasterplanPanel.gallery => FitPanel(maxHeightFactor: 0.5, child: _buildGallery(strings)),
                           null => const SizedBox(width: 0, height: 0),
                         },
                       ),
@@ -194,7 +290,38 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
           ),
         ],
       ),
+        ),
+      ),
     );
+  }
+
+  /// Hint, filter result count, "no match" or load-error chip under the header.
+  Widget _statusChip(AppStrings strings, {required int matchCount, required int total}) {
+    if (_loadFailed) {
+      return StatusChip(
+        key: const ValueKey('error'),
+        label: strings.loadError,
+        action: strings.retry,
+        onAction: _load,
+      );
+    }
+    if (_types.isEmpty) return const SizedBox.shrink(key: ValueKey('none'));
+    if (_filtersActive) {
+      return StatusChip(
+        key: ValueKey('count-$matchCount'),
+        label: matchCount == 0 ? strings.noMatch : strings.matchCount(matchCount, total),
+        action: strings.clearFilters,
+        onAction: _clearFilters,
+      );
+    }
+    if (_hintVisible && _panel == null) {
+      return StatusChip(
+        key: const ValueKey('hint'),
+        label: strings.tapBuildingHint,
+        icon: Icons.touch_app_outlined,
+      );
+    }
+    return const SizedBox.shrink(key: ValueKey('none'));
   }
 
   Widget _buildFilters(AppStrings strings) {
@@ -223,7 +350,15 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                     ],
                   ),
                 ),
-                _CloseButton(
+                if (_filtersActive || _hideUnavailable)
+                  TextButton(
+                    onPressed: _clearFilters,
+                    child: Text(
+                      strings.clearFilters,
+                      style: _text(strings, 14, FontWeight.w500, color: AppColors.accent),
+                    ),
+                  ),
+                PanelCloseButton(
                   tooltip: strings.close,
                   onPressed: () => setState(() => _panel = null),
                 ),
@@ -345,7 +480,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                 Expanded(
                   child: Text(strings.gallery, style: _text(strings, 28, FontWeight.w400)),
                 ),
-                _CloseButton(
+                PanelCloseButton(
                   tooltip: strings.close,
                   onPressed: () => setState(() => _panel = null),
                 ),
@@ -395,39 +530,84 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
           : GoogleFonts.rubik(fontSize: size, fontWeight: weight, color: color, letterSpacing: spacing);
 
   static TextStyle _label(AppStrings strings) =>
-      _text(strings, 16, FontWeight.w600, color: Colors.white.withValues(alpha: 0.64), spacing: -0.16);
+      _text(strings, 16, FontWeight.w600, color: AppColors.textSecondary, spacing: -0.16);
 }
 
 /// The aerial photo with one box button per building of the upper lane. Laid
 /// out on the photo's own pixel grid so the buttons stay on their buildings.
-class _MapCanvas extends StatelessWidget {
-  const _MapCanvas({required this.buildings, required this.onSelect});
+class _MapCanvas extends StatefulWidget {
+  const _MapCanvas({required this.buildings, required this.onSelect, required this.pulse});
 
   final List<_BuildingSpot> buildings;
   final void Function(BuildingType type, String id) onSelect;
 
+  /// Draws an attention ring around the buttons (first-visit hint).
+  final bool pulse;
+
   static const _size = Size(2000, 1147);
+
+  /// Visible box and touch target of a building button, on the photo grid.
   static const _button = 44.0;
+  static const _target = 64.0;
+
+  @override
+  State<_MapCanvas> createState() => _MapCanvasState();
+}
+
+class _MapCanvasState extends State<_MapCanvas> with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1800),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.pulse) _pulse.repeat();
+  }
+
+  @override
+  void didUpdateWidget(_MapCanvas old) {
+    super.didUpdateWidget(old);
+    if (widget.pulse && !_pulse.isAnimating) {
+      _pulse.repeat();
+    } else if (!widget.pulse && _pulse.isAnimating) {
+      _pulse.stop();
+      _pulse.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    const target = _MapCanvas._target;
     return FittedBox(
       fit: BoxFit.cover,
       clipBehavior: Clip.hardEdge,
       child: SizedBox.fromSize(
-        size: _size,
+        size: _MapCanvas._size,
         child: Stack(
           children: [
-            Positioned.fill(
-              child: Image.asset('assets/images/masterplan/background.png', fit: BoxFit.cover),
+            const Positioned.fill(
+              child: FadeInAsset('assets/images/masterplan/background.png'),
             ),
-            for (final b in buildings)
+            for (final b in widget.buildings)
               Positioned(
-                left: b.center.dx - _button / 2,
-                top: b.center.dy - _button / 2,
-                width: _button,
-                height: _button,
-                child: _BuildingButton(label: b.id, onTap: () => onSelect(b.type, b.id)),
+                left: b.center.dx - target / 2,
+                top: b.center.dy - target / 2,
+                width: target,
+                height: target,
+                child: _BuildingButton(
+                  label: b.id,
+                  matched: b.matched,
+                  pulse: _pulse,
+                  onTap: () => widget.onSelect(b.type, b.id),
+                ),
               ),
           ],
         ),
@@ -437,35 +617,112 @@ class _MapCanvas extends StatelessWidget {
 }
 
 class _BuildingSpot {
-  const _BuildingSpot(this.center, this.type, this.id);
+  const _BuildingSpot(this.center, this.type, this.id, {this.matched = true});
 
   final Offset center;
   final BuildingType type;
   final String id;
+
+  /// False when the active filters exclude this building (it is dimmed).
+  final bool matched;
 }
 
-class _BuildingButton extends StatelessWidget {
-  const _BuildingButton({required this.label, required this.onTap});
+/// Building box button: 44px visible box in a larger touch target, with hover
+/// and press feedback, a pulse ring while the hint is showing, and a dimmed
+/// look when filtered out (it stays tappable).
+class _BuildingButton extends StatefulWidget {
+  const _BuildingButton({
+    required this.label,
+    required this.matched,
+    required this.pulse,
+    required this.onTap,
+  });
 
   final String label;
+  final bool matched;
+  final Animation<double> pulse;
   final VoidCallback onTap;
+
+  @override
+  State<_BuildingButton> createState() => _BuildingButtonState();
+}
+
+class _BuildingButtonState extends State<_BuildingButton> {
+  bool _hovered = false;
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(8);
-    return Material(
-      color: AppColors.glass,
-      shape: RoundedRectangleBorder(
-        borderRadius: radius,
-        side: const BorderSide(color: AppColors.accent, width: 2),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: radius,
-        child: Center(
-          child: Text(
-            label,
-            style: GoogleFonts.rubik(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+    final active = _hovered || _pressed;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTap: () {
+          setState(() => _pressed = false);
+          HapticFeedback.selectionClick();
+          widget.onTap();
+        },
+        child: Semantics(
+          button: true,
+          label: widget.label,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: widget.matched ? 1 : 0.35,
+            child: Center(
+              child: SizedBox.square(
+                dimension: _MapCanvas._button,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  fit: StackFit.expand,
+                  children: [
+                    if (widget.matched)
+                      IgnorePointer(
+                        child: AnimatedBuilder(
+                          animation: widget.pulse,
+                          builder: (context, _) {
+                            final t = widget.pulse.value;
+                            return Opacity(
+                              opacity: widget.pulse.isAnimating ? 1 - t : 0,
+                              child: Transform.scale(
+                                scale: 1 + 0.7 * t,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    borderRadius: radius,
+                                    border: Border.all(color: AppColors.accent, width: 2),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    AnimatedScale(
+                      duration: const Duration(milliseconds: 120),
+                      scale: active ? 1.18 : 1,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: active ? AppColors.accent : AppColors.glass,
+                          borderRadius: radius,
+                          border: Border.all(color: AppColors.accent, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            widget.label,
+                            style: GoogleFonts.rubik(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -488,6 +745,9 @@ class _BottomNav extends StatelessWidget {
 
   static const _assets = _MasterplanScreenState._assets;
 
+  /// Holding a rotate button keeps turning, one step per this interval.
+  static const _holdRepeat = Duration(milliseconds: 450);
+
   @override
   Widget build(BuildContext context) {
     // Physical left/right: the rotate direction must not mirror in RTL.
@@ -497,7 +757,8 @@ class _BottomNav extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           GlassIconButton(
-            size: 40,
+            size: 48,
+            repeatEvery: _holdRepeat,
             tooltip: strings.rotateLeft,
             onPressed: () => onRotate(-1),
             child: SvgPicture.asset('$_assets/icon_rotate.svg'),
@@ -531,7 +792,8 @@ class _BottomNav extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           GlassIconButton(
-            size: 40,
+            size: 48,
+            repeatEvery: _holdRepeat,
             tooltip: strings.rotateRight,
             onPressed: () => onRotate(1),
             // Figma uses the same glyph mirrored for the opposite direction.
@@ -647,24 +909,6 @@ class _GlassPanel extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _CloseButton extends StatelessWidget {
-  const _CloseButton({required this.tooltip, required this.onPressed});
-
-  final String tooltip;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-      icon: SvgPicture.asset('assets/images/masterplan/icon_close.svg', width: 32, height: 32),
     );
   }
 }
@@ -791,7 +1035,7 @@ class _ValueField extends StatelessWidget {
       child: Text(
         value.round().toString(),
         style: _MasterplanScreenState._text(strings, 16, FontWeight.w400, spacing: -0.16)
-            .copyWith(color: Colors.white.withValues(alpha: 0.64)),
+            .copyWith(color: AppColors.textSecondary),
       ),
     );
   }
@@ -826,7 +1070,7 @@ class _CheckOption extends StatelessWidget {
           Text(
             label,
             style: _MasterplanScreenState._text(strings, 16, FontWeight.w400, spacing: -0.16)
-                .copyWith(color: Colors.white.withValues(alpha: 0.64)),
+                .copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),

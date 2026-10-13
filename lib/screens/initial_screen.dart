@@ -25,6 +25,12 @@ class InitialScreen extends StatelessWidget {
       body: OverlayBackground(
         image: 'assets/images/initial_screen.png',
         overlayImage: 'assets/images/overlay_frame.png',
+        // Darkest behind the centred title, light at the edges so the sunset
+        // and skyline stay visible (Figma: flat 64%).
+        overlayGradient: const RadialGradient(
+          radius: 0.75,
+          colors: [Color(0x99000000), Color(0x40000000)],
+        ),
         child: SafeArea(
           minimum: const EdgeInsets.all(32),
           child: Stack(

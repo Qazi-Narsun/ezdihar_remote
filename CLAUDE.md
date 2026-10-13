@@ -14,6 +14,9 @@ Flutter app implementing the Figma file
    (identical SVGs get one file).
 4. Check existing code first (below) and reuse before creating anything.
 5. Verify against the screenshot: assets present, sizes, positions, RTL.
+6. Before writing/replacing a screen, read "Intentional overrides of the Figma design" below:
+   the screenshot is NOT the target where an override applies. Update existing screens by
+   editing them (new visuals in, overrides kept), never by regenerating the whole file.
 
 ## Project map
 - `lib/screens/` one file per screen. `lib/widgets/` reusable pieces.
@@ -43,7 +46,7 @@ Flutter app implementing the Figma file
 - Floor selection (Figma 35:2647): the floor outline SVGs are tappable (outline i
   = floor i+1; tap empty space clears). Selected floor swaps the info panel for
   "Floor Details" and opens the `_ApartmentsPanel` (bottom-centre): a drag-scrollable row
-  of image-only cards, one per apartment type of the building, loaded from
+  of cards (plan + bedrooms label), one per apartment type of the building, loaded from
   `assets/images/apartments/<type id lower-case>.png` (1br..4br; currently copies
   of the placeholder plan, replace with real plans). Floor Details X only
   collapses the panel (info button reopens); Apartments X clears the selection.
@@ -56,12 +59,74 @@ Flutter app implementing the Figma file
   transparent modal route with the "Your Information" form (name/email/phone validated, nothing
   sent anywhere yet). On submit it pushes `InterestRegisteredScreen` (blurred exterior, logo,
   Restart Experience = popUntil first, dismissible toast top-end). Assets in `assets/images/register/`.
-- Convention: every Restart button on a screen (this and future ones) does
-  `Navigator.popUntil((r) => r.isFirst)`, not a local state reset.
+- Convention: every Restart button on a screen (this and future ones) ends in
+  `Navigator.popUntil((r) => r.isFirst)`, not a local state reset. Restart buttons on the
+  masterplan/building screens go through `confirmRestart(context)` (`restart_dialog.dart`);
+  the thank-you screen restarts directly (it auto-restarts after 30s).
   Assets in `assets/images/building/`.
+- UX layer (added after the UX review):
+  - `IdleReset` (`lib/widgets/idle_reset.dart`, mounted in `MaterialApp.builder` with the app
+    `navigatorKey`): 90s without input off the first page -> "Still there?" 15s countdown ->
+    `popUntil(first)`. `LocaleFade` cross-fades on language change (state is kept).
+  - Masterplan: building buttons have a 64px touch target, hover/press feedback, a first-visit
+    pulse + "Tap a building" hint (`StatusChip`, gone after 12s or first interaction), and are
+    dimmed when filtered out (building type + floor count apply; surface/availability have no
+    data yet). Chip shows "N of 22 match" / no-match with Clear filters / load error with Retry.
+    Drag the map or hold a rotate button (`GlassIconButton.repeatEvery`) to rotate; arrow keys
+    rotate, Esc closes the panel.
+  - Building detail: `_Breadcrumb` (Masterplan > Building > Floor), `_FloorStepper` (up/down
+    while a floor is selected, arrow keys too), floor outlines have tooltips, panels swap with
+    `AnimatedSwitcher`. Back/system back/Esc close the topmost layer first (apartment, floor)
+    via `PopScope`. Floor Details/Building panel uses a collapse chevron (not X); X still means
+    "clear selection" on Apartments and Apartment Details. Apartment cards show a bedrooms
+    label; the row fades at scrollable edges and has arrow buttons.
+  - Register form: errors show on blur/submit with messages, autofill hints, next/done
+    actions, country-code picker (`+966` default), digits-only phone.
+  - Shared: `PanelCloseButton` (32px icon, 48px target; use it for every panel X), `FitPanel`
+    (scales a glass panel down to a max screen fraction so the background stays visible),
+    `FadeInAsset`, `StatusChip`, `appText()` (`lib/theme/app_text.dart`). Haptic
+    `selectionClick` on glass/pill buttons.
+  - Background visibility: initial screen tint is a radial gradient (64% -> 25%), city map
+    edge darkening 80% -> 56%, modal scrim 80% -> 64%. `AppColors.textSecondary` (white @ 72%)
+    replaces white @ 64% for secondary text.
 - `RotatingView` (`lib/widgets/rotating_view.dart`) is the shared slide/zoom
   stand-in for 360 frames. `GlassIconButton` takes `padding` for a pill with
   icon + label.
+
+## Intentional overrides of the Figma design (UX review, 2026-10)
+These deviate from Figma ON PURPOSE. When a screen is re-implemented or synced from an updated
+Figma, keep every override below unless the user explicitly says to drop it. Do not "fix" them
+back to the Figma values, and do not remove the behaviours when regenerating a screen from
+`get_design_context`: merge the new visuals into the existing code instead of replacing it.
+If Figma changes something an override touches, apply the new design *around* the override
+and mention the conflict to the user.
+
+Visual (background visibility):
+- Initial screen tint: radial gradient 60% -> 25% black (Figma: flat 64%).
+- City map edge darkening: 56% (Figma 80%), centre 15%.
+- Modal scrim `AppColors.scrim`: 64% black (Figma 80%).
+- Glass panels are capped by `FitPanel` (max ~60% of screen height, gallery 50%, info/apartment
+  panels 45% width); apartment details panel spacing is 32 (Figma 48) and plan image 190 high.
+- Secondary text on glass uses `AppColors.textSecondary` (white @ 72%), not Figma's 64%.
+
+Sizing / touch:
+- All icon buttons >= 48px touch target (rotate buttons 48, not 40; `PanelCloseButton` 48 target
+  around the 32px X; building buttons 64px target around the 44px box).
+
+Behaviour (not in Figma):
+- `IdleReset` (90s + 15s countdown) and `LocaleFade`; thank-you screen auto-restart (30s) and toast
+  auto-dismiss (8s); extra "Browse more units" button on the thank-you screen.
+- `confirmRestart` dialog before Restart on masterplan and building screens.
+- Masterplan: first-visit pulse + "Tap a building" hint chip, filter-driven dimming and
+  match-count / no-match / error chip, "Clear filters" in the Filters panel, drag-to-rotate,
+  hold-to-spin, arrow/Esc keys.
+- Building detail: breadcrumb in the header, floor stepper (up/down) while a floor is selected,
+  floor tooltips, "Tap a floor" hint, collapse chevron (not X) on the Building/Floor info panel,
+  layered Back/Esc via `PopScope`, animated panel swaps, bedrooms label on apartment cards,
+  fading edges + arrow buttons on the apartment row.
+- Register form: validate-on-blur with error messages, autofill hints, next/done actions,
+  country-code picker, digits-only phone, focus first invalid field.
+- Haptic `selectionClick` on glass/pill/dialog buttons.
 
 ## Rules
 - Reuse existing widgets/tokens; extend them (new optional param) instead of duplicating.

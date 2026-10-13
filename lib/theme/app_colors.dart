@@ -20,13 +20,20 @@ abstract final class AppColors {
   static const apartmentCard = Color(0xFFDDD1C3);
   static const unitChip = Color(0xFF453C37);
 
-  /// Dark scrim behind modals (black @ 80%) and the register form panel (brown @ 48%).
-  static const scrim = Color(0xCC000000);
+  /// Secondary text on glass (white @ 72%): readable over bright backgrounds.
+  static const textSecondary = Color(0xB8FFFFFF);
+
+  /// Dark scrim behind modals (black @ 64%, lighter than Figma's 80% so the
+  /// photo stays visible) and the register form panel (brown @ 48%).
+  static const scrim = Color(0xA3000000);
   static const formPanel = Color(0x7A2D1C10);
 
   /// Text field fill (white @ 4%) and error outline.
   static const fieldFill = Color(0x0AFFFFFF);
   static const fieldError = Color(0xFFE5484D);
+
+  /// Error message text: a lighter red that stays readable on the dark glass.
+  static const fieldErrorText = Color(0xFFFF8A8E);
 
   /// Halo ring around range-slider thumbs (#D3AC87 @ 40%).
   static const sliderHalo = Color(0x66D3AC87);

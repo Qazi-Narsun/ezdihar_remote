@@ -16,13 +16,30 @@ import 'masterplan_screen.dart';
 /// Figma: "City Context" (node 3:1716), authored on a 1920x1081 canvas. The map
 /// is laid out on that canvas and scaled to cover the screen; the header sits
 /// outside the canvas so it stays pinned to the screen edges.
-class CityContextScreen extends StatelessWidget {
+class CityContextScreen extends StatefulWidget {
   const CityContextScreen({super.key, required this.onLocaleChanged});
 
   final ValueChanged<Locale> onLocaleChanged;
 
   static const _canvas = Size(1920, 1081);
   static const _assets = 'assets/images/city';
+
+  @override
+  State<CityContextScreen> createState() => _CityContextScreenState();
+}
+
+class _CityContextScreenState extends State<CityContextScreen> {
+  static const _canvas = CityContextScreen._canvas;
+  static const _assets = CityContextScreen._assets;
+
+  ValueChanged<Locale> get onLocaleChanged => widget.onLocaleChanged;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Warm up the masterplan photo so it does not pop in after the tap.
+    precacheImage(const AssetImage('assets/images/masterplan/background.png'), context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +111,8 @@ class _MapCanvas extends StatelessWidget {
       image: '$_assets/map_background.png',
       overlayGradient: const RadialGradient(
         radius: 0.5, // of the shorter side: 540.5px vertically, stretched below
-        colors: [Color(0x33000000), Color(0xCC000000)],
+        // Edge darkening eased from Figma's 80% to 56% so more map shows.
+        colors: [Color(0x26000000), Color(0x8F000000)],
         transform: _EllipseTransform(scaleX: 1301.7 / 540.5),
       ),
       child: Stack(

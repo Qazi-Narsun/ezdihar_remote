@@ -1,14 +1,21 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../data/building_data.dart';
 import '../l10n/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../widgets/fade_in_asset.dart';
+import '../widgets/fit_panel.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/language_toggle.dart';
+import '../widgets/panel_close_button.dart';
+import '../widgets/restart_dialog.dart';
+import '../widgets/status_chip.dart';
 import 'register_interest_screen.dart';
 
 /// Exterior view of a single building with an info panel.
@@ -16,9 +23,13 @@ import 'register_interest_screen.dart';
 /// Figma: "Exterior" with the panel open (81:2) and closed (225:184), authored
 /// on a 1920x1081 canvas. Opened from a building button on [MasterplanScreen].
 ///
-/// The panel starts open; its X closes it and leaves an info button at the
-/// bottom-start corner that opens it again. Rotate buttons slide the picture
-/// (placeholder for 360 frames) and Restart returns to the first page.
+/// The panel starts open; its collapse button closes it and leaves an info
+/// button at the bottom-start corner that opens it again. Rotate buttons slide
+/// the picture (placeholder for 360 frames) and Restart (after a confirmation)
+/// returns to the first page.
+///
+/// Back (button, system gesture or Esc) closes the topmost layer first: the
+/// apartment, then the floor, and only then leaves the screen.
 class BuildingDetailScreen extends StatefulWidget {
   const BuildingDetailScreen({
     super.key,
@@ -50,152 +61,304 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
   int? _floor;
   int? _apartment;
 
-  void _selectFloor(int? floor) => setState(() {
-        _floor = floor;
-        _apartment = null;
-      });
+  /// "Tap a floor" hint; dropped on the first selection or after a while.
+  bool _hintVisible = true;
+  Timer? _hintTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _hintTimer = Timer(const Duration(seconds: 12), _dismissHint);
+  }
+
+  @override
+  void dispose() {
+    _hintTimer?.cancel();
+    super.dispose();
+  }
+
+  void _dismissHint() {
+    _hintTimer?.cancel();
+    if (_hintVisible && mounted) setState(() => _hintVisible = false);
+  }
+
+  bool get _hasLayer => _floor != null || _apartment != null;
+
+  void _selectFloor(int? floor) {
+    if (floor != null) _dismissHint();
+    setState(() {
+      _floor = floor;
+      _apartment = null;
+    });
+  }
+
+  /// Steps the selected floor outline by [delta] (-1 is the one drawn above).
+  void _stepFloor(int delta) {
+    final next = _floor! + delta;
+    if (next >= 0 && next < _ExteriorCanvas.outlineCount) _selectFloor(next);
+  }
+
+  void _closeTopLayer() {
+    if (_apartment != null) {
+      setState(() => _apartment = null);
+    } else if (_floor != null) {
+      _selectFloor(null);
+    }
+  }
 
   void _rotate(int delta) =>
       setState(() => _frame = (_frame + delta) % _frames.length);
 
-  /// Restart: clear the stack and return to the first page.
-  void _restart() => Navigator.of(context).popUntil((route) => route.isFirst);
+  /// Restart: confirm, then clear the stack and return to the first page.
+  void _restart() => confirmRestart(context);
 
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
     final isArabic = strings.isArabic;
-    return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          FittedBox(
-            fit: BoxFit.cover,
-            clipBehavior: Clip.hardEdge,
-            child: SizedBox.fromSize(
-              size: _canvas,
-              child: _ExteriorCanvas(
-                frame: _frames[_frame],
-                showOutlines: _frame == 0,
-                selected: _floor,
-                onSelect: _selectFloor,
-              ),
-            ),
-          ),
-          SafeArea(
-            minimum: const EdgeInsets.all(32),
-            child: Stack(
+    final floorStepper = _floor != null;
+    return PopScope(
+      canPop: !_hasLayer,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _closeTopLayer();
+      },
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.arrowLeft): () {
+            if (_floor == null) _rotate(-1);
+          },
+          const SingleActivator(LogicalKeyboardKey.arrowRight): () {
+            if (_floor == null) _rotate(1);
+          },
+          const SingleActivator(LogicalKeyboardKey.arrowUp): () {
+            if (_floor != null) _stepFloor(-1);
+          },
+          const SingleActivator(LogicalKeyboardKey.arrowDown): () {
+            if (_floor != null) _stepFloor(1);
+          },
+          const SingleActivator(LogicalKeyboardKey.escape): () {
+            _hasLayer ? _closeTopLayer() : Navigator.of(context).maybePop();
+          },
+        },
+        child: Focus(
+          autofocus: true,
+          child: Scaffold(
+            body: Stack(
+              fit: StackFit.expand,
               children: [
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                FittedBox(
+                  fit: BoxFit.cover,
+                  clipBehavior: Clip.hardEdge,
+                  child: SizedBox.fromSize(
+                    size: _canvas,
+                    child: _ExteriorCanvas(
+                      frame: _frames[_frame],
+                      showOutlines: _frame == 0,
+                      selected: _floor,
+                      onSelect: _selectFloor,
+                      floorLabel: (i) => '${strings.floor} ${i + 1}',
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  minimum: const EdgeInsets.all(32),
+                  child: Stack(
                     children: [
-                      GlassIconButton(
-                        size: 48,
-                        tooltip: strings.back,
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        child: Transform.flip(
-                          flipX: isArabic,
-                          child: SvgPicture.asset('assets/images/city/arrow_left.svg'),
+                      Align(
+                        alignment: Alignment.topCenter,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GlassIconButton(
+                              size: 48,
+                              tooltip: strings.back,
+                              onPressed: () => Navigator.of(context).maybePop(),
+                              child: Transform.flip(
+                                flipX: isArabic,
+                                child: SvgPicture.asset('assets/images/city/arrow_left.svg'),
+                              ),
+                            ),
+                            Flexible(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: _Breadcrumb(
+                                    strings: strings,
+                                    buildingId: widget.buildingId,
+                                    floor: _floor == null ? null : _floor! + 1,
+                                    onMasterplan: () => Navigator.of(context).pop(),
+                                    onBuilding: () => _selectFloor(null),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            LanguageToggle(
+                              selected: isArabic ? AppLanguage.arabic : AppLanguage.english,
+                              onChanged: (language) => widget.onLocaleChanged(
+                                Locale(language == AppLanguage.arabic ? 'ar' : 'en'),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      LanguageToggle(
-                        selected: isArabic ? AppLanguage.arabic : AppLanguage.english,
-                        onChanged: (language) => widget.onLocaleChanged(
-                          Locale(language == AppLanguage.arabic ? 'ar' : 'en'),
+                      Align(
+                        alignment: Alignment.topCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 72),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            child: _hintVisible && _floor == null
+                                ? StatusChip(
+                                    key: const ValueKey('hint'),
+                                    label: strings.tapFloorHint,
+                                    icon: Icons.touch_app_outlined,
+                                  )
+                                : const SizedBox.shrink(key: ValueKey('none')),
+                          ),
+                        ),
+                      ),
+                      // Physical left/right: the rotate direction must not mirror in RTL.
+                      // Hidden on the floor screen (a floor is selected).
+                      if (!floorStepper) ...[
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: GlassIconButton(
+                            size: 48,
+                            tooltip: strings.rotateLeft,
+                            onPressed: () => _rotate(-1),
+                            child: SvgPicture.asset('assets/images/masterplan/icon_rotate.svg'),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: GlassIconButton(
+                            size: 48,
+                            tooltip: strings.rotateRight,
+                            onPressed: () => _rotate(1),
+                            child: Transform.flip(
+                              flipX: true,
+                              child: SvgPicture.asset('assets/images/masterplan/icon_rotate.svg'),
+                            ),
+                          ),
+                        ),
+                      ] else
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: _FloorStepper(
+                            strings: strings,
+                            floor: _floor! + 1,
+                            onUp: _floor! > 0 ? () => _stepFloor(-1) : null,
+                            onDown: _floor! < _ExteriorCanvas.outlineCount - 1 ? () => _stepFloor(1) : null,
+                          ),
+                        ),
+                      Align(
+                        alignment: AlignmentDirectional.bottomStart,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          transitionBuilder: _panelTransition,
+                          layoutBuilder: (current, previous) => Stack(
+                            alignment: AlignmentDirectional.bottomStart,
+                            children: [...previous, ?current],
+                          ),
+                          child: _startPanel(strings),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          transitionBuilder: _panelTransition,
+                          child: _floor != null && _apartment == null
+                              ? FitPanel(
+                                  key: const ValueKey('apartments'),
+                                  child: _ApartmentsPanel(
+                                    strings: strings,
+                                    apartmentTypes: widget.type.apartmentTypes,
+                                    selected: _apartment,
+                                    onSelect: (i) => setState(() => _apartment = i),
+                                    onClose: () => _selectFloor(null),
+                                  ),
+                                )
+                              : const SizedBox.shrink(key: ValueKey('none')),
+                        ),
+                      ),
+                      Align(
+                        alignment: AlignmentDirectional.bottomEnd,
+                        child: GlassIconButton(
+                          size: 48,
+                          padding: const EdgeInsets.symmetric(horizontal: 21),
+                          onPressed: _restart,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SvgPicture.asset('$_assets/icon_restart.svg'),
+                              const SizedBox(width: 8),
+                              Text(
+                                strings.restart,
+                                style: _text(strings, 14, FontWeight.w400, spacing: 0.28),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Physical left/right: the rotate direction must not mirror in RTL.
-                // Hidden on the floor screen (a floor is selected).
-                if (_floor == null) ...[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: GlassIconButton(
-                      size: 48,
-                      tooltip: strings.rotateLeft,
-                      onPressed: () => _rotate(-1),
-                      child: SvgPicture.asset('assets/images/masterplan/icon_rotate.svg'),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GlassIconButton(
-                      size: 48,
-                      tooltip: strings.rotateRight,
-                      onPressed: () => _rotate(1),
-                      child: Transform.flip(
-                        flipX: true,
-                        child: SvgPicture.asset('assets/images/masterplan/icon_rotate.svg'),
-                      ),
-                    ),
-                  ),
-                ],
-                Align(
-                  alignment: AlignmentDirectional.bottomStart,
-                  child: _apartment != null
-                      ? _ApartmentDetailsPanel(
-                          strings: strings,
-                          floor: _floor! + 1,
-                          type: widget.type.apartmentTypes[_apartment!],
-                          onClose: () => setState(() => _apartment = null),
-                        )
-                      : _panelOpen
-                      ? _InfoPanel(
-                          title: _floor != null
-                              ? strings.floorDetails
-                              : strings.buildingTypeTitle(widget.type.type),
-                          strings: strings,
-                          type: widget.type,
-                          buildingId: widget.buildingId,
-                          floor: _floor == null ? null : _floor! + 1,
-                          // Only collapses the panel; the floor stays selected.
-                          onClose: () => setState(() => _panelOpen = false),
-                        )
-                      : GlassIconButton(
-                          tooltip: strings.buildingInfo,
-                          onPressed: () => setState(() => _panelOpen = true),
-                          child: SvgPicture.asset('$_assets/icon_info.svg'),
-                        ),
-                ),
-                if (_floor != null && _apartment == null)
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: _ApartmentsPanel(
-                      strings: strings,
-                      apartmentTypes: widget.type.apartmentTypes,
-                      selected: _apartment,
-                      onSelect: (i) => setState(() => _apartment = i),
-                      onClose: () => _selectFloor(null),
-                    ),
-                  ),
-                Align(
-                  alignment: AlignmentDirectional.bottomEnd,
-                  child: GlassIconButton(
-                    size: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 21),
-                    onPressed: _restart,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset('$_assets/icon_restart.svg'),
-                        const SizedBox(width: 8),
-                        Text(
-                          strings.restart,
-                          style: _text(strings, 14, FontWeight.w400, spacing: 0.28),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
-        ],
+        ),
       ),
+    );
+  }
+
+  /// Fade plus a short rise for panels swapping in and out.
+  static Widget _panelTransition(Widget child, Animation<double> animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween(begin: const Offset(0, 0.04), end: Offset.zero).animate(animation),
+          child: child,
+        ),
+      );
+
+  /// The bottom-start slot: apartment details, building/floor info, or the
+  /// info button when the panel is collapsed.
+  Widget _startPanel(AppStrings strings) {
+    if (_apartment != null) {
+      return FitPanel(
+        key: const ValueKey('apartment'),
+        maxWidthFactor: 0.45,
+        alignment: AlignmentDirectional.bottomStart,
+        child: _ApartmentDetailsPanel(
+          strings: strings,
+          floor: _floor! + 1,
+          type: widget.type.apartmentTypes[_apartment!],
+          onClose: () => setState(() => _apartment = null),
+        ),
+      );
+    }
+    if (_panelOpen) {
+      return FitPanel(
+        key: ValueKey(_floor == null ? 'building' : 'floor'),
+        maxWidthFactor: 0.45,
+        alignment: AlignmentDirectional.bottomStart,
+        child: _InfoPanel(
+          title: _floor != null ? strings.floorDetails : strings.buildingTypeTitle(widget.type.type),
+          strings: strings,
+          type: widget.type,
+          buildingId: widget.buildingId,
+          floor: _floor == null ? null : _floor! + 1,
+          // Only collapses the panel; the floor stays selected.
+          onCollapse: () => setState(() => _panelOpen = false),
+        ),
+      );
+    }
+    return GlassIconButton(
+      key: const ValueKey('info'),
+      tooltip: strings.buildingInfo,
+      onPressed: () => setState(() => _panelOpen = true),
+      child: SvgPicture.asset('$_assets/icon_info.svg'),
     );
   }
 }
@@ -211,6 +374,114 @@ TextStyle _text(
         ? GoogleFonts.notoSansArabic(fontSize: size, fontWeight: weight, color: color, letterSpacing: spacing)
         : GoogleFonts.rubik(fontSize: size, fontWeight: weight, color: color, letterSpacing: spacing);
 
+/// Masterplan › Building › Floor trail. Earlier segments are tappable.
+class _Breadcrumb extends StatelessWidget {
+  const _Breadcrumb({
+    required this.strings,
+    required this.buildingId,
+    required this.floor,
+    required this.onMasterplan,
+    required this.onBuilding,
+  });
+
+  final AppStrings strings;
+  final String buildingId;
+  final int? floor;
+  final VoidCallback onMasterplan;
+  final VoidCallback onBuilding;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(40);
+    final segments = [
+      (strings.masterplan, onMasterplan),
+      ('${strings.buildingNo} $buildingId', floor == null ? null : onBuilding),
+      if (floor != null) ('${strings.floor} $floor', null),
+    ];
+    return ClipRRect(
+      borderRadius: radius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: AppColors.glass,
+            borderRadius: radius,
+            border: Border.all(color: AppColors.glassBorder, width: 0.48),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < segments.length; i++) ...[
+                if (i > 0)
+                  Transform.flip(
+                    flipX: strings.isArabic,
+                    child: const Icon(Icons.chevron_right, size: 20, color: AppColors.textSecondary),
+                  ),
+                InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: segments[i].$2,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    child: Text(
+                      segments[i].$1,
+                      style: _text(
+                        strings,
+                        14,
+                        i == segments.length - 1 ? FontWeight.w500 : FontWeight.w400,
+                        color: i == segments.length - 1 ? Colors.white : AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Up / down buttons that move the floor selection without tapping the photo.
+class _FloorStepper extends StatelessWidget {
+  const _FloorStepper({
+    required this.strings,
+    required this.floor,
+    required this.onUp,
+    required this.onDown,
+  });
+
+  final AppStrings strings;
+  final int floor;
+  final VoidCallback? onUp;
+  final VoidCallback? onDown;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget arrow(IconData icon, String tooltip, VoidCallback? onTap) => Opacity(
+          opacity: onTap == null ? 0.4 : 1,
+          child: GlassIconButton(
+            size: 48,
+            tooltip: tooltip,
+            onPressed: onTap,
+            child: Icon(icon, color: Colors.white),
+          ),
+        );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        arrow(Icons.keyboard_arrow_up_rounded, strings.previousFloor, onUp),
+        const SizedBox(height: 8),
+        Text('${strings.floor} $floor', style: _text(strings, 14, FontWeight.w500, spacing: 0.28)),
+        const SizedBox(height: 8),
+        arrow(Icons.keyboard_arrow_down_rounded, strings.nextFloor, onDown),
+      ],
+    );
+  }
+}
+
 /// The building photo with the floor outlines drawn over it, on the Figma
 /// canvas so the outlines stay registered to the photo.
 class _ExteriorCanvas extends StatelessWidget {
@@ -219,12 +490,16 @@ class _ExteriorCanvas extends StatelessWidget {
     required this.showOutlines,
     required this.selected,
     required this.onSelect,
+    required this.floorLabel,
   });
 
   final String frame;
   final bool showOutlines;
   final int? selected;
   final ValueChanged<int?> onSelect;
+
+  /// Tooltip text (shown on hover / long-press) for the outline at an index.
+  final String Function(int index) floorLabel;
 
   static const _assets = _BuildingDetailScreenState._assets;
 
@@ -239,6 +514,8 @@ class _ExteriorCanvas extends StatelessWidget {
     (box: Rect.fromLTWH(608, 616, 210, 63), inset: (5.05, 1.43, 11.22, 3.33)),
   ];
 
+  static int get outlineCount => _outlines.length;
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -248,11 +525,11 @@ class _ExteriorCanvas extends StatelessWidget {
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => onSelect(null),
-          child: Image.asset(frame, fit: BoxFit.cover),
+          child: FadeInAsset(frame),
         ),
         if (showOutlines)
           for (var i = 0; i < _outlines.length; i++)
-          _positioned(i, _outlines[i].box, _outlines[i].inset, '$_assets/floor_outline_${i + 1}.svg'),
+            _positioned(i, _outlines[i].box, _outlines[i].inset, '$_assets/floor_outline_${i + 1}.svg'),
       ],
     );
   }
@@ -265,13 +542,22 @@ class _ExteriorCanvas extends StatelessWidget {
       top: box.top - box.height * top / 100,
       width: box.width * (1 + (left + right) / 100),
       height: box.height * (1 + (top + bottom) / 100),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onSelect(index),
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          opacity: dimmed ? 0.4 : 1,
-          child: SvgPicture.asset(asset, fit: BoxFit.fill),
+      child: Tooltip(
+        message: floorLabel(index),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onSelect(index);
+            },
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: dimmed ? 0.4 : 1,
+              child: SvgPicture.asset(asset, fit: BoxFit.fill),
+            ),
+          ),
         ),
       ),
     );
@@ -284,7 +570,7 @@ class _InfoPanel extends StatelessWidget {
     required this.title,
     required this.type,
     required this.buildingId,
-    required this.onClose,
+    required this.onCollapse,
     this.floor,
   });
 
@@ -292,7 +578,7 @@ class _InfoPanel extends StatelessWidget {
   final String title;
   final BuildingType type;
   final String buildingId;
-  final VoidCallback onClose;
+  final VoidCallback onCollapse;
 
   /// When set the panel shows floor details instead of building details.
   final int? floor;
@@ -326,18 +612,17 @@ class _InfoPanel extends StatelessWidget {
                       style: _text(strings, 24, FontWeight.w500, spacing: -0.24),
                     ),
                   ),
-                  IconButton(
-                    tooltip: strings.close,
-                    onPressed: onClose,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-                    icon: SvgPicture.asset('assets/images/masterplan/icon_close.svg', width: 32, height: 32),
+                  // A chevron, not an X: this only tucks the panel away.
+                  PanelCloseButton(
+                    tooltip: strings.collapse,
+                    onPressed: onCollapse,
+                    child: const Icon(Icons.keyboard_arrow_down_rounded, size: 32, color: Colors.white),
                   ),
                 ],
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 40),
               for (var i = 0; i < rows.length; i++) ...[
-                if (i > 0) const SizedBox(height: 32),
+                if (i > 0) const SizedBox(height: 28),
                 _InfoRow(strings: strings, label: rows[i].$1, value: rows[i].$2),
               ],
             ],
@@ -374,7 +659,7 @@ class _ApartmentDetailsPanel extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
         child: Container(
           width: 472,
-          padding: const EdgeInsets.fromLTRB(32, 40, 32, 32),
+          padding: const EdgeInsets.fromLTRB(32, 32, 32, 32),
           decoration: BoxDecoration(color: AppColors.glass, borderRadius: radius),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -387,23 +672,17 @@ class _ApartmentDetailsPanel extends StatelessWidget {
                       style: _text(strings, 24, FontWeight.w500, spacing: -0.24),
                     ),
                   ),
-                  IconButton(
-                    tooltip: strings.close,
-                    onPressed: onClose,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-                    icon: SvgPicture.asset('assets/images/masterplan/icon_close.svg', width: 32, height: 32),
-                  ),
+                  PanelCloseButton(tooltip: strings.close, onPressed: onClose),
                 ],
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
               for (var i = 0; i < rows.length; i++) ...[
                 if (i > 0) const SizedBox(height: 16),
                 _InfoRow(strings: strings, label: rows[i].$1, value: rows[i].$2),
               ],
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
               Container(
-                height: 206,
+                height: 190,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: AppColors.apartmentCard,
@@ -417,7 +696,7 @@ class _ApartmentDetailsPanel extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
               Row(
                 children: [
                   Expanded(
@@ -447,17 +726,23 @@ class _PanelButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: BoxDecoration(
-          color: filled ? AppColors.accent : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(80),
-          border: filled ? null : Border.all(color: AppColors.glassBorder),
+    final radius = BorderRadius.circular(80);
+    return Material(
+      color: filled ? AppColors.accent : Colors.white.withValues(alpha: 0.05),
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: filled ? BorderSide.none : const BorderSide(color: AppColors.glassBorder),
+      ),
+      child: InkWell(
+        borderRadius: radius,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Center(child: Text(label, style: _text(strings, 18, FontWeight.w500, spacing: -0.18))),
         ),
-        child: Text(label, style: _text(strings, 18, FontWeight.w500, spacing: -0.18)),
       ),
     );
   }
@@ -522,48 +807,190 @@ class _ApartmentsPanel extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    tooltip: strings.close,
-                    onPressed: onClose,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-                    icon: SvgPicture.asset('assets/images/masterplan/icon_close.svg', width: 32, height: 32),
-                  ),
+                  PanelCloseButton(tooltip: strings.close, onPressed: onClose),
                 ],
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                height: _ApartmentCard.height,
-                // Mouse drag must scroll too (desktop/web default excludes it).
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad},
-                  ),
-                  // Centred when the cards fit, scrolls when they overflow.
-                  child: LayoutBuilder(
-                    builder: (context, constraints) => SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            for (var i = 0; i < apartmentTypes.length; i++) ...[
-                              if (i > 0) const SizedBox(width: _gap),
-                              _ApartmentCard(
-                                asset: 'assets/images/apartments/${apartmentTypes[i].toLowerCase()}.png',
-                                selected: selected == i,
-                                onTap: () => onSelect(i),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
+              _CardsRow(
+                strings: strings,
+                apartmentTypes: apartmentTypes,
+                selected: selected,
+                onSelect: onSelect,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Drag-scrollable row of apartment cards that fades at the edges it can still
+/// scroll past and offers arrow buttons (mouse users cannot see drag-scroll).
+class _CardsRow extends StatefulWidget {
+  const _CardsRow({
+    required this.strings,
+    required this.apartmentTypes,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  final AppStrings strings;
+  final List<String> apartmentTypes;
+  final int? selected;
+  final ValueChanged<int> onSelect;
+
+  @override
+  State<_CardsRow> createState() => _CardsRowState();
+}
+
+class _CardsRowState extends State<_CardsRow> {
+  final _controller = ScrollController();
+  bool _canBack = false;
+  bool _canForward = false;
+
+  static const _fade = 0.12;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_update);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _update());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _update() {
+    if (!_controller.hasClients) return;
+    final position = _controller.position;
+    final back = position.pixels > 1;
+    final forward = position.pixels < position.maxScrollExtent - 1;
+    if (back != _canBack || forward != _canForward) {
+      setState(() {
+        _canBack = back;
+        _canForward = forward;
+      });
+    }
+  }
+
+  void _scroll(int direction) {
+    const step = (_ApartmentCard.width + _ApartmentsPanel._gap) * 2;
+    _controller.animateTo(
+      (_controller.offset + direction * step).clamp(0, _controller.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final types = widget.apartmentTypes;
+    return SizedBox(
+      height: _ApartmentCard.height,
+      child: Stack(
+        children: [
+          ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (rect) => LinearGradient(
+              begin: rtl ? Alignment.centerRight : Alignment.centerLeft,
+              end: rtl ? Alignment.centerLeft : Alignment.centerRight,
+              colors: [
+                _canBack ? Colors.transparent : Colors.black,
+                Colors.black,
+                Colors.black,
+                _canForward ? Colors.transparent : Colors.black,
+              ],
+              stops: const [0, _fade, 1 - _fade, 1],
+            ).createShader(rect),
+            // Mouse drag must scroll too (desktop/web default excludes it).
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad},
+              ),
+              // Centred when the cards fit, scrolls when they overflow.
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  controller: _controller,
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (var i = 0; i < types.length; i++) ...[
+                          if (i > 0) const SizedBox(width: _ApartmentsPanel._gap),
+                          _ApartmentCard(
+                            asset: 'assets/images/apartments/${types[i].toLowerCase()}.png',
+                            label: widget.strings.bedrooms(types[i].replaceAll(RegExp(r'\D'), '')),
+                            selected: widget.selected == i,
+                            onTap: () => widget.onSelect(i),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ),
               ),
-            ],
+            ),
+          ),
+          if (_canBack)
+            PositionedDirectional(
+              start: 0,
+              top: 0,
+              bottom: 0,
+              child: _ScrollArrow(
+                tooltip: widget.strings.scrollBack,
+                icon: Icons.chevron_left,
+                flip: rtl,
+                onTap: () => _scroll(-1),
+              ),
+            ),
+          if (_canForward)
+            PositionedDirectional(
+              end: 0,
+              top: 0,
+              bottom: 0,
+              child: _ScrollArrow(
+                tooltip: widget.strings.scrollForward,
+                icon: Icons.chevron_right,
+                flip: rtl,
+                onTap: () => _scroll(1),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScrollArrow extends StatelessWidget {
+  const _ScrollArrow({required this.tooltip, required this.icon, required this.flip, required this.onTap});
+
+  final String tooltip;
+  final IconData icon;
+  final bool flip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Tooltip(
+        message: tooltip,
+        child: Material(
+          color: AppColors.glass,
+          shape: const CircleBorder(side: BorderSide(color: AppColors.glassBorder, width: 0.48)),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: SizedBox.square(
+              dimension: 40,
+              child: Transform.flip(flipX: flip, child: Icon(icon, color: Colors.white)),
+            ),
           ),
         ),
       ),
@@ -574,6 +1001,7 @@ class _ApartmentsPanel extends StatelessWidget {
 class _ApartmentCard extends StatelessWidget {
   const _ApartmentCard({
     required this.asset,
+    required this.label,
     required this.selected,
     required this.onTap,
   });
@@ -582,19 +1010,23 @@ class _ApartmentCard extends StatelessWidget {
   static const height = 180.0;
 
   final String asset;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppStrings.of(context);
     final radius = BorderRadius.circular(16);
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       child: Container(
         width: width,
         height: height,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 15),
+        padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
         decoration: BoxDecoration(color: AppColors.apartmentCard, borderRadius: radius),
         foregroundDecoration: selected
             ? BoxDecoration(
@@ -602,9 +1034,20 @@ class _ApartmentCard extends StatelessWidget {
                 border: Border.all(color: AppColors.accent, width: 3),
               )
             : null,
-        child: ClipRRect(
-          borderRadius: radius,
-          child: Image.asset(asset, fit: BoxFit.contain),
+        child: Column(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: radius,
+                child: Image.asset(asset, fit: BoxFit.contain),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: _text(strings, 14, FontWeight.w500, color: AppColors.calloutCard),
+            ),
+          ],
         ),
       ),
     );
@@ -620,7 +1063,7 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = _text(strings, 16, FontWeight.w400, color: Colors.white.withValues(alpha: 0.64), spacing: -0.16);
+    final style = _text(strings, 16, FontWeight.w400, color: AppColors.textSecondary, spacing: -0.16);
     return Row(
       children: [
         Expanded(child: Text(label, style: style)),

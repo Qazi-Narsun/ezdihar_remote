@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_colors.dart';
@@ -34,7 +35,12 @@ class PillButton extends StatelessWidget {
             side: const BorderSide(color: Colors.white),
           ),
           child: InkWell(
-            onTap: onPressed,
+            onTap: onPressed == null
+                ? null
+                : () {
+                    HapticFeedback.selectionClick();
+                    onPressed!();
+                  },
             borderRadius: radius,
             child: SizedBox(
               width: width,

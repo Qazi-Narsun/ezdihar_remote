@@ -65,6 +65,30 @@ class AppStrings {
     'interestRegisteredBody':
         'Thank you for expressing your interest. Our team will contact you via phone or email with the next steps.',
     'restartExperience': 'Restart Experience',
+    'masterplan': 'Masterplan',
+    'collapse': 'Collapse',
+    'tapBuildingHint': 'Tap a building to explore it',
+    'tapFloorHint': 'Tap a floor to see its apartments',
+    'matchCount': '{n} of {total} buildings match',
+    'noMatch': 'No buildings match your filters',
+    'clearFilters': 'Clear filters',
+    'restartConfirmTitle': 'Restart the experience?',
+    'restartConfirmBody': 'You will return to the start screen.',
+    'cancel': 'Cancel',
+    'stillThereTitle': 'Still there?',
+    'stillThereBody': 'Returning to the start in {s}s',
+    'stillHere': "I'm here",
+    'bedrooms': '{n} Bedroom',
+    'previousFloor': 'Floor above',
+    'nextFloor': 'Floor below',
+    'scrollBack': 'Scroll back',
+    'scrollForward': 'Scroll forward',
+    'nameError': 'Please enter your name',
+    'emailError': 'Enter a valid email address',
+    'phoneError': 'Enter a valid phone number',
+    'browseMore': 'Browse more units',
+    'loadError': 'Could not load building data',
+    'retry': 'Retry',
   };
 
   static const _ar = {
@@ -121,6 +145,30 @@ class AppStrings {
     'interestRegisteredBody':
         'شكراً لإبداء اهتمامك. سيتواصل معك فريقنا عبر الهاتف أو البريد الإلكتروني لإبلاغك بالخطوات التالية.',
     'restartExperience': 'إعادة التجربة',
+    'masterplan': 'المخطط العام',
+    'collapse': 'طيّ',
+    'tapBuildingHint': 'اضغط على مبنى لاستكشافه',
+    'tapFloorHint': 'اضغط على طابق لعرض شققه',
+    'matchCount': '{n} من {total} مبنى مطابق',
+    'noMatch': 'لا توجد مبانٍ مطابقة للتصفية',
+    'clearFilters': 'مسح التصفية',
+    'restartConfirmTitle': 'إعادة التجربة؟',
+    'restartConfirmBody': 'ستعود إلى الشاشة الرئيسية.',
+    'cancel': 'إلغاء',
+    'stillThereTitle': 'هل ما زلت هنا؟',
+    'stillThereBody': 'العودة إلى البداية خلال {s} ث',
+    'stillHere': 'أنا هنا',
+    'bedrooms': '{n} غرف نوم',
+    'previousFloor': 'الطابق الأعلى',
+    'nextFloor': 'الطابق الأسفل',
+    'scrollBack': 'السابق',
+    'scrollForward': 'التالي',
+    'nameError': 'الرجاء إدخال الاسم',
+    'emailError': 'أدخل بريداً إلكترونياً صحيحاً',
+    'phoneError': 'أدخل رقم هاتف صحيحاً',
+    'browseMore': 'تصفح المزيد من الوحدات',
+    'loadError': 'تعذّر تحميل بيانات المباني',
+    'retry': 'إعادة المحاولة',
   };
 
   static AppStrings of(BuildContext context) =>
@@ -179,6 +227,31 @@ class AppStrings {
   String get interestRegistered => _values['interestRegistered']!;
   String get interestRegisteredBody => _values['interestRegisteredBody']!;
   String get restartExperience => _values['restartExperience']!;
+  String get masterplan => _values['masterplan']!;
+  String get collapse => _values['collapse']!;
+  String get tapBuildingHint => _values['tapBuildingHint']!;
+  String get tapFloorHint => _values['tapFloorHint']!;
+  String get noMatch => _values['noMatch']!;
+  String get clearFilters => _values['clearFilters']!;
+  String get restartConfirmTitle => _values['restartConfirmTitle']!;
+  String get restartConfirmBody => _values['restartConfirmBody']!;
+  String get cancel => _values['cancel']!;
+  String get stillThereTitle => _values['stillThereTitle']!;
+  String get stillHere => _values['stillHere']!;
+  String get previousFloor => _values['previousFloor']!;
+  String get nextFloor => _values['nextFloor']!;
+  String get scrollBack => _values['scrollBack']!;
+  String get scrollForward => _values['scrollForward']!;
+  String get nameError => _values['nameError']!;
+  String get emailError => _values['emailError']!;
+  String get phoneError => _values['phoneError']!;
+  String get browseMore => _values['browseMore']!;
+  String get loadError => _values['loadError']!;
+  String get retry => _values['retry']!;
+  String matchCount(int n, int total) =>
+      _values['matchCount']!.replaceAll('{n}', '$n').replaceAll('{total}', '$total');
+  String stillThereBody(int seconds) => _values['stillThereBody']!.replaceAll('{s}', '$seconds');
+  String bedrooms(String n) => _values['bedrooms']!.replaceAll('{n}', n);
   String buildingTypeTitle(String type) => _values['buildingTypeTitle']!.replaceAll('{type}', type);
 }
 
