@@ -18,16 +18,10 @@ samples, guidance on mobile development, and a full API reference.
 ## CI builds
 
 `.github/workflows/android.yml` builds a release APK on every push to `main` (and on
-"Run workflow"), named `ezdihar_remote_v<version>_build<run>_<sha>.apk`, attaches it to
-the run and copies it to the Google Drive folder.
-
-Drive upload setup (once):
-1. Install [rclone](https://rclone.org/downloads/) and run `rclone config`:
-   `n` (new remote), name `gdrive`, storage `drive`, leave client id/secret empty,
-   scope `1` (full access), accept the defaults and sign in with the Google account
-   that can edit the folder.
-2. Print the config with `rclone config show gdrive` and add it (including the
-   `[gdrive]` line) as the repository secret `RCLONE_CONF`.
+"Run workflow") and publishes it as a GitHub Release tagged `v<version>-build<run>`,
+with the APK named `ezdihar_remote_v<version>_build<run>_<sha>.apk`. Pull requests
+only build (the APK is attached to the run). Bump `version:` in `pubspec.yaml` to
+change the version part; the run number is used as the Android build number.
 
 Optional release signing: add `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
 `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`; otherwise builds use a debug key.
