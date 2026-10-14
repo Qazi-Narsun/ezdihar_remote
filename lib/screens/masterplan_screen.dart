@@ -50,6 +50,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
 
   _MasterplanPanel? _panel;
   int _turns = 0;
+  final _view = GlobalKey<RotatingViewState>();
 
   // Filter state (the map has no unit data yet, so it is only held here).
   RangeValues _floors = _floorBounds;
@@ -163,6 +164,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
 
   void _openBuilding(BuildingType type, String id) {
     _dismissHint();
+    _view.currentState?.resetZoom();
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => BuildingDetailScreen(
@@ -179,7 +181,14 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
     setState(() => _panel = _panel == panel ? null : panel);
   }
 
+  /// Rotate buttons and arrow keys: back to 1x, then turn.
   void _rotate(int delta) {
+    _view.currentState?.resetZoom();
+    _onStep(delta);
+  }
+
+  /// A drag on the map settled on a new step (only at 1x).
+  void _onStep(int delta) {
     _dismissHint();
     setState(() => _turns = (_turns + delta).clamp(-_maxTurns, _maxTurns));
   }
@@ -206,9 +215,10 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
         fit: StackFit.expand,
         children: [
           RotatingView(
+            key: _view,
             turns: _turns,
             maxTurns: _maxTurns,
-            onStep: _rotate,
+            onStep: _onStep,
             child: _MapCanvas(
               buildings: spots,
               onSelect: _openBuilding,
