@@ -104,7 +104,11 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
     data yet). Chip shows "N of 22 match" / no-match with Clear filters / load error with Retry.
     Drag the map (pans 1:1 with the finger, snaps to the nearest step on release) or hold a
     rotate button (`GlassIconButton.repeatEvery`) to rotate; arrow keys rotate, Esc closes the
-    panel. The Restart button (bottom-end) is an icon + "Restart" pill, as on the building screen.
+    panel. Pinch zooms 1x..3x around the fingers, double-tap toggles 2x at that point / 1x, and
+    while zoomed one finger pans freely (no rotation); the zoom wraps the map so building buttons
+    stay put and tappable. Rotate buttons/keys and opening a building reset to 1x
+    (`RotatingViewState.resetZoom`). Double-tap is detected on raw pointers so building taps
+    are not delayed. The Restart button (bottom-end) is an icon + "Restart" pill, as on the building screen.
     The Filters panel always reserves the Clear filters slot so it does not resize (QA #03).
   - Building detail: `_Breadcrumb` (Masterplan > Building > Floor), `_FloorStepper` (up/down
     while a floor is selected, arrow keys too; centre-end, opposite the start-side panels),
@@ -157,7 +161,7 @@ Behaviour (not in Figma):
 - `confirmRestart` dialog before Restart on masterplan and building screens.
 - Masterplan: first-visit pulse + "Tap a building" hint chip, filter-driven dimming and
   match-count / no-match / error chip, "Clear filters" in the Filters panel, drag-to-rotate,
-  hold-to-spin, arrow/Esc keys.
+  hold-to-spin, arrow/Esc keys, pinch / double-tap zoom with free pan.
 - Building detail: breadcrumb in the header, floor stepper (up/down) while a floor is selected,
   floor tooltips, "Tap a floor" hint, collapse chevron (not X) on the Building/Floor info panel,
   layered Back/Esc via `PopScope`, animated panel swaps, bedrooms label on apartment cards,
