@@ -92,10 +92,14 @@ keep important content inside x = 100..1820 of the canvas.
     pulse + "Tap a building" hint (`StatusChip`, gone after 12s or first interaction), and are
     dimmed when filtered out (building type + floor count apply; surface/availability have no
     data yet). Chip shows "N of 22 match" / no-match with Clear filters / load error with Retry.
-    Drag the map or hold a rotate button (`GlassIconButton.repeatEvery`) to rotate; arrow keys
-    rotate, Esc closes the panel.
+    Drag the map (pans 1:1 with the finger, snaps to the nearest step on release) or hold a
+    rotate button (`GlassIconButton.repeatEvery`) to rotate; arrow keys rotate, Esc closes the
+    panel. The Restart button (bottom-end) is an icon + "Restart" pill, as on the building screen.
+    The Filters panel always reserves the Clear filters slot so it does not resize (QA #03).
   - Building detail: `_Breadcrumb` (Masterplan > Building > Floor), `_FloorStepper` (up/down
-    while a floor is selected, arrow keys too), floor outlines have tooltips, panels swap with
+    while a floor is selected, arrow keys too; centre-end, opposite the start-side panels),
+    selected floor outline is filled (accent @ ~40%), selecting a floor or closing Apartment
+    Details reopens a collapsed info panel, floor outlines have tooltips, panels swap with
     `AnimatedSwitcher`. Back/system back/Esc close the topmost layer first (apartment, floor)
     via `PopScope`. Floor Details/Building panel uses a collapse chevron (not X); X still means
     "clear selection" on Apartments and Apartment Details. Apartment cards show a bedrooms
@@ -103,7 +107,10 @@ keep important content inside x = 100..1820 of the canvas.
   - Register form: errors show on blur/submit with messages, autofill hints, next/done
     actions, country-code picker (`+966` default), digits-only phone.
   - Shared: `PanelCloseButton` (32px icon, 48px target; use it for every panel X), `FitPanel`
-    (scales a glass panel down to a max screen fraction so the background stays visible),
+    (first scales a glass panel by `FitPanel.designScale` = screen / 1920x1081 Figma frame,
+    capped at 1, so it takes the same share of the screen as in Figma on a 1.5x tablet; then
+    scales it down to a max screen fraction so the background stays visible; wrap every
+    glass panel/toast in it),
     `FadeInAsset`, `StatusChip`, `appText()` (`lib/theme/app_text.dart`). Haptic
     `selectionClick` on glass/pill buttons.
   - Background visibility: initial screen tint is a radial gradient (64% -> 25%), city map

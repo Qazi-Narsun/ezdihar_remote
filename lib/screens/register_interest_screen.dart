@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../l10n/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../widgets/fit_panel.dart';
 import '../widgets/panel_close_button.dart';
 
 TextStyle _text(
@@ -436,12 +437,14 @@ class _InterestRegisteredScreenState extends State<InterestRegisteredScreen> {
         children: [
           const _BlurredScrim(showImage: true),
           Center(
-            child: SizedBox(
-              width: 260,
+            // As wide as the widest button (at least the logo), so the
+            // Restart Experience label stays on one line in both languages.
+            child: IntrinsicWidth(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SvgPicture.asset('assets/images/register/logo_large.svg'),
+                  Center(child: SvgPicture.asset('assets/images/register/logo_large.svg')),
                   const SizedBox(height: 40),
                   Material(
                     color: AppColors.accent,
@@ -459,11 +462,11 @@ class _InterestRegisteredScreenState extends State<InterestRegisteredScreen> {
                           children: [
                             SvgPicture.asset('assets/images/building/icon_restart.svg', width: 24, height: 24),
                             const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                strings.restartExperience,
-                                style: _text(strings, 18, FontWeight.w500, spacing: -0.18),
-                              ),
+                            Text(
+                              strings.restartExperience,
+                              maxLines: 1,
+                              softWrap: false,
+                              style: _text(strings, 18, FontWeight.w500, spacing: -0.18),
                             ),
                           ],
                         ),
@@ -508,7 +511,10 @@ class _InterestRegisteredScreenState extends State<InterestRegisteredScreen> {
                 duration: const Duration(milliseconds: 200),
                 child: !_toastVisible
                     ? const SizedBox.shrink()
-                    : ClipRRect(
+                    : FitPanel(
+                        maxWidthFactor: 0.45,
+                        alignment: AlignmentDirectional.topEnd,
+                        child: ClipRRect(
                         borderRadius: radius,
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
@@ -551,6 +557,7 @@ class _InterestRegisteredScreenState extends State<InterestRegisteredScreen> {
                             ),
                           ),
                         ),
+                      ),
                       ),
               ),
             ),

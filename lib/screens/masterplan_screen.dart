@@ -280,9 +280,17 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                 Align(
                   alignment: AlignmentDirectional.bottomEnd,
                   child: GlassIconButton(
-                    tooltip: strings.resetView,
+                    size: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 21),
                     onPressed: _reset,
-                    child: SvgPicture.asset('$_assets/icon_reset.svg'),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset('$_assets/icon_reset.svg'),
+                        const SizedBox(width: 8),
+                        Text(strings.restart, style: _text(strings, 14, FontWeight.w400, spacing: 0.28)),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -350,14 +358,21 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                     ],
                   ),
                 ),
-                if (_filtersActive || _hideUnavailable)
-                  TextButton(
+                // Space is always reserved so the panel keeps its size when
+                // the first filter is applied.
+                Visibility(
+                  visible: _filtersActive || _hideUnavailable,
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  child: TextButton(
                     onPressed: _clearFilters,
                     child: Text(
                       strings.clearFilters,
                       style: _text(strings, 14, FontWeight.w500, color: AppColors.accent),
                     ),
                   ),
+                ),
                 PanelCloseButton(
                   tooltip: strings.close,
                   onPressed: () => setState(() => _panel = null),

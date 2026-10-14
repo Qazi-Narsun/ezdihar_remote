@@ -99,8 +99,16 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
     setState(() {
       _floor = floor;
       _apartment = null;
+      // A collapsed info panel comes back with the new floor's details.
+      if (floor != null) _panelOpen = true;
     });
   }
+
+  /// Closes the apartment details and brings the floor details back.
+  void _closeApartment() => setState(() {
+        _apartment = null;
+        _panelOpen = true;
+      });
 
   /// Steps the selected floor by [delta] (-1 is the floor above).
   void _stepFloor(int delta) {
@@ -110,7 +118,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
 
   void _closeTopLayer() {
     if (_apartment != null) {
-      setState(() => _apartment = null);
+      _closeApartment();
     } else if (_floor != null) {
       _selectFloor(null);
     }
@@ -254,8 +262,9 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                           ),
                         ),
                       ] else
+                        // Opposite the start-side panels, so it never covers them.
                         Align(
-                          alignment: Alignment.centerRight,
+                          alignment: AlignmentDirectional.centerEnd,
                           child: _FloorStepper(
                             strings: strings,
                             floor: strings.floorName(_floors[_floor!].code),
@@ -346,7 +355,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
           floor: strings.floorNumber(_floors[_floor!].code),
           type: _floorTypes[_apartment!],
           details: widget.type.apartments[_floorTypes[_apartment!]],
-          onClose: () => setState(() => _apartment = null),
+          onClose: _closeApartment,
         ),
       );
     }
@@ -525,6 +534,15 @@ class _ExteriorCanvas extends StatelessWidget {
 
   static const _assets = _BuildingDetailScreenState._assets;
 
+  /// Raises the outline SVG's near-transparent fill (1%) to ~40% opacity,
+  /// keeping its colour; the stroke stays opaque.
+  static const _selectedFill = ColorFilter.matrix([
+    1, 0, 0, 0, 0, //
+    0, 1, 0, 0, 0, //
+    0, 0, 1, 0, 0, //
+    0, 0, 0, 40, 0, //
+  ]);
+
   /// Per outline: Figma box (left, top, width, height) and the SVG's overflow
   /// beyond that box in percent (top, right, bottom, left).
   static const _outlines = [
@@ -557,6 +575,7 @@ class _ExteriorCanvas extends StatelessWidget {
   Widget _positioned(int index, Rect box, (double, double, double, double) inset, String asset) {
     final (top, right, bottom, left) = inset;
     final dimmed = selected != null && selected != index;
+    final svg = SvgPicture.asset(asset, fit: BoxFit.fill);
     return Positioned(
       left: box.left - box.width * left / 100,
       top: box.top - box.height * top / 100,
@@ -575,7 +594,8 @@ class _ExteriorCanvas extends StatelessWidget {
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               opacity: dimmed ? 0.4 : 1,
-              child: SvgPicture.asset(asset, fit: BoxFit.fill),
+              // The selected floor is filled, not just outlined.
+              child: selected == index ? ColorFiltered(colorFilter: _selectedFill, child: svg) : svg,
             ),
           ),
         ),
@@ -617,11 +637,11 @@ class _InfoPanel extends StatelessWidget {
       if (floor != null) (strings.floor, strings.floorNumber(floor!)) else (strings.floors, '${type.floors}'),
       if (f != null) ...[
         (strings.numberOfApartments, '${f.apartments}'),
-        (strings.apartmentType, f.apartmentTypes.isEmpty ? '-' : f.apartmentTypes.join(', ')),
+        (strings.apartmentTypes, f.apartmentTypes.isEmpty ? '-' : f.apartmentTypes.join(', ')),
         (strings.floorArea, '${f.area} ${strings.areaUnit}'),
       ] else ...[
         (strings.numberOfApartments, '${type.apartmentsPerBuilding}'),
-        (strings.apartmentType, type.apartmentTypes.join(', ')),
+        (strings.apartmentTypes, type.apartmentTypes.join(', ')),
         (strings.totalArea, '${type.totalArea} ${strings.areaUnit}'),
       ],
     ];
@@ -694,7 +714,7 @@ class _ApartmentDetailsPanel extends StatelessWidget {
     final rows = [
       (strings.floor, floor),
       (strings.type, type),
-      if (d != null) (strings.area, '${d.area} ${strings.areaUnit}'),
+      if (d != null) (strings.size, '${d.area} ${strings.areaUnit}'),
     ];
     return ClipRRect(
       borderRadius: radius,
