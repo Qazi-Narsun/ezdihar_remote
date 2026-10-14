@@ -3,13 +3,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'app_canvas.dart';
+
 /// Sizes a fixed-size glass panel (authored in Figma pixels) to the screen.
 ///
 /// The panel is first scaled by [designScale], so it takes the same share of
-/// the screen as in the 1920x1081 Figma frame even when the device has fewer
-/// logical pixels (a 1920x1200 tablet is ~1280x800 logical at 1.5x). It is then
-/// scaled down further (never up) so it takes at most [maxWidthFactor] x
-/// [maxHeightFactor] of the screen and the background stays visible.
+/// the [AppCanvas] as in the 1920x1081 Figma frame. It is then scaled down
+/// further (never up) so it takes at most [maxWidthFactor] x [maxHeightFactor]
+/// of the screen and the background stays visible.
 class FitPanel extends StatelessWidget {
   const FitPanel({
     super.key,
@@ -27,11 +28,12 @@ class FitPanel extends StatelessWidget {
   /// Figma frame the panels are authored on.
   static const designSize = Size(1920, 1081);
 
-  /// Logical pixels per Figma pixel on this screen (at most 1).
-  static double designScale(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    return math.min(1, math.min(size.width / designSize.width, size.height / designSize.height));
-  }
+  /// Canvas pixels per Figma pixel. Constant: the canvas is the same on
+  /// every screen.
+  static final double designScale = math.min(
+    AppCanvas.size.width / designSize.width,
+    AppCanvas.size.height / designSize.height,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +47,7 @@ class FitPanel extends StatelessWidget {
       child: FittedBox(
         fit: BoxFit.scaleDown,
         alignment: alignment,
-        child: _DesignScaled(scale: designScale(context), child: child),
+        child: _DesignScaled(scale: designScale, child: child),
       ),
     );
   }

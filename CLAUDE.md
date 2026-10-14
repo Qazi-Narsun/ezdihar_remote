@@ -9,6 +9,14 @@ landscape + `SystemUiMode.immersiveSticky`; the manifest uses `sensorLandscape`.
 (1920x1081) are scaled with `BoxFit.cover`, so ~5% of the canvas width is cropped per side at 16:10:
 keep important content inside x = 100..1820 of the canvas.
 
+**One canvas for every screen:** `AppCanvas` (`lib/widgets/app_canvas.dart`, mounted in
+`MaterialApp.builder` around everything) lays the whole app out on a fixed 1280x800 logical canvas
+(what the 1920x1200 tablet reports at 1.5x) and scales it uniformly to the screen, so every 16:10
+resolution/density shows the identical layout; other aspects are letterboxed (`AppColors.letterbox`),
+never reflowed. System text scaling is ignored. All logical sizes in code are canvas pixels: never
+size things from the real screen or `devicePixelRatio`. `test/app_canvas_test.dart` checks every
+screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x1600 x 1, 1.5, 2.
+
 ## Workflow: Figma -> Flutter
 1. Load the `figma:figma-design-to-code` skill, then `create_session` (fileKey) and
    `get_design_context` (nodeId with `-` -> `:`, `skillNames: figma-design-to-code`).
@@ -109,8 +117,8 @@ keep important content inside x = 100..1820 of the canvas.
   - Register form: errors show on blur/submit with messages, autofill hints, next/done
     actions, country-code picker (`+966` default), digits-only phone.
   - Shared: `PanelCloseButton` (32px icon, 48px target; use it for every panel X), `FitPanel`
-    (first scales a glass panel by `FitPanel.designScale` = screen / 1920x1081 Figma frame,
-    capped at 1, so it takes the same share of the screen as in Figma on a 1.5x tablet; then
+    (first scales a glass panel by the constant `FitPanel.designScale` = canvas / 1920x1081
+    Figma frame, so it takes the same share of the screen as in Figma; then
     scales it down to a max screen fraction so the background stays visible; wrap every
     glass panel/toast in it),
     `FadeInAsset`, `StatusChip`, `appText()` (`lib/theme/app_text.dart`). Haptic
