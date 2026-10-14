@@ -31,7 +31,8 @@ keep important content inside x = 100..1820 of the canvas.
 - Flow: `InitialScreen` -> (Start Journey, `Navigator.push`) -> `CityContextScreen`
   -> (tap project logo card) -> `MasterplanScreen`; back button pops.
 - `MasterplanScreen` (Figma 24:1403 + Filters 49:5630 + Gallery 49:6205): bottom nav
-  = rotate-left / Filters|Gallery tabs / rotate-right. Tabs are mutually exclusive
+  = Filters|Gallery tabs; rotate-left / rotate-right buttons sit at the screen sides,
+  vertically centred (Figma 225:542 / 225:526, as on the building screen). Tabs are mutually exclusive
   panel toggles (tap active tab or X closes). Rotate buttons slide the zoomed
   aerial image (placeholder for 360 frames); reset button (bottom-end) is the Restart
   button: pops the stack to the first page (`InitialScreen`). Filter state is held locally (no unit data yet).

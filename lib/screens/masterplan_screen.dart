@@ -22,8 +22,8 @@ import 'building_detail_screen.dart';
 /// Which panel the bottom navigation currently has open above the map.
 enum _MasterplanPanel { filters, gallery }
 
-/// Aerial masterplan view with a bottom navigation (rotate left / Filters |
-/// Gallery / rotate right) and a reset-view button.
+/// Aerial masterplan view with a bottom navigation (Filters | Gallery), rotate
+/// left / right buttons at the screen sides and a reset-view button.
 ///
 /// Figma: "Masterplan" (24:1403), "Masterplan_Filters" (49:5630) and
 /// "Masterplan_Gallery" (49:6205), authored on a 1920x1081 canvas.
@@ -43,6 +43,9 @@ class MasterplanScreen extends StatefulWidget {
 
 class _MasterplanScreenState extends State<MasterplanScreen> {
   static const _assets = 'assets/images/masterplan';
+
+  /// Holding a rotate button keeps turning, one step per this interval.
+  static const _holdRepeat = Duration(milliseconds: 450);
   static const _maxTurns = 3;
 
   _MasterplanPanel? _panel;
@@ -271,10 +274,35 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                       _BottomNav(
                         strings: strings,
                         panel: _panel,
-                        onRotate: _rotate,
                         onSelect: _togglePanel,
                       ),
                     ],
+                  ),
+                ),
+                // Figma 225:542 / 225:526: rotate buttons at the screen sides,
+                // vertically centred. Physical left/right: must not mirror in RTL.
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GlassIconButton(
+                    size: 48,
+                    repeatEvery: _holdRepeat,
+                    tooltip: strings.rotateLeft,
+                    onPressed: () => _rotate(-1),
+                    child: SvgPicture.asset('$_assets/icon_rotate.svg'),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GlassIconButton(
+                    size: 48,
+                    repeatEvery: _holdRepeat,
+                    tooltip: strings.rotateRight,
+                    onPressed: () => _rotate(1),
+                    // Figma uses the same glyph mirrored for the opposite direction.
+                    child: Transform.flip(
+                      flipX: true,
+                      child: SvgPicture.asset('$_assets/icon_rotate.svg'),
+                    ),
                   ),
                 ),
                 Align(
@@ -398,7 +426,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                       title: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(strings.surface, style: _label(strings)),
+                          Text(strings.size, style: _label(strings)),
                           const SizedBox(width: 4),
                           Container(
                             padding: const EdgeInsets.all(4),
@@ -749,73 +777,39 @@ class _BottomNav extends StatelessWidget {
   const _BottomNav({
     required this.strings,
     required this.panel,
-    required this.onRotate,
     required this.onSelect,
   });
 
   final AppStrings strings;
   final _MasterplanPanel? panel;
-  final ValueChanged<int> onRotate;
   final ValueChanged<_MasterplanPanel> onSelect;
 
   static const _assets = _MasterplanScreenState._assets;
 
-  /// Holding a rotate button keeps turning, one step per this interval.
-  static const _holdRepeat = Duration(milliseconds: 450);
-
   @override
   Widget build(BuildContext context) {
-    // Physical left/right: the rotate direction must not mirror in RTL.
-    return Directionality(
-      textDirection: TextDirection.ltr,
+    return _GlassPill(
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GlassIconButton(
-            size: 48,
-            repeatEvery: _holdRepeat,
-            tooltip: strings.rotateLeft,
-            onPressed: () => onRotate(-1),
-            child: SvgPicture.asset('$_assets/icon_rotate.svg'),
+          _NavTab(
+            strings: strings,
+            label: strings.filters,
+            icon: '$_assets/icon_filters.svg',
+            fontSize: 14,
+            spacing: 0.28,
+            selected: panel == _MasterplanPanel.filters,
+            onTap: () => onSelect(_MasterplanPanel.filters),
           ),
-          const SizedBox(width: 8),
-          _GlassPill(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _NavTab(
-                  strings: strings,
-                  label: strings.filters,
-                  icon: '$_assets/icon_filters.svg',
-                  fontSize: 14,
-                  spacing: 0.28,
-                  selected: panel == _MasterplanPanel.filters,
-                  onTap: () => onSelect(_MasterplanPanel.filters),
-                ),
-                _NavTab(
-                  strings: strings,
-                  label: strings.gallery,
-                  icon: '$_assets/icon_gallery.svg',
-                  fontSize: 16,
-                  spacing: 0.32,
-                  minWidth: 106,
-                  selected: panel == _MasterplanPanel.gallery,
-                  onTap: () => onSelect(_MasterplanPanel.gallery),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          GlassIconButton(
-            size: 48,
-            repeatEvery: _holdRepeat,
-            tooltip: strings.rotateRight,
-            onPressed: () => onRotate(1),
-            // Figma uses the same glyph mirrored for the opposite direction.
-            child: Transform.flip(
-              flipX: true,
-              child: SvgPicture.asset('$_assets/icon_rotate.svg'),
-            ),
+          _NavTab(
+            strings: strings,
+            label: strings.gallery,
+            icon: '$_assets/icon_gallery.svg',
+            fontSize: 16,
+            spacing: 0.32,
+            minWidth: 106,
+            selected: panel == _MasterplanPanel.gallery,
+            onTap: () => onSelect(_MasterplanPanel.gallery),
           ),
         ],
       ),

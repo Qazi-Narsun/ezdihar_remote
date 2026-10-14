@@ -29,7 +29,6 @@ class AppStrings {
     'filtersSubtitle': 'Refine your search to discover the project property',
     'gallery': 'Gallery',
     'floor': 'Floor',
-    'surface': 'Surface',
     'sqm': 'sqm',
     'availability': 'Availability',
     'hideUnavailableUnits': 'Hide unavailable units',
@@ -120,7 +119,6 @@ class AppStrings {
     'filtersSubtitle': 'حدّد بحثك لاكتشاف العقار المناسب في المشروع',
     'gallery': 'المعرض',
     'floor': 'الطابق',
-    'surface': 'المساحة',
     'sqm': 'م²',
     'availability': 'التوفر',
     'hideUnavailableUnits': 'إخفاء الوحدات غير المتاحة',
@@ -215,7 +213,6 @@ class AppStrings {
   String get filtersSubtitle => _values['filtersSubtitle']!;
   String get gallery => _values['gallery']!;
   String get floor => _values['floor']!;
-  String get surface => _values['surface']!;
   String get sqm => _values['sqm']!;
   String get availability => _values['availability']!;
   String get hideUnavailableUnits => _values['hideUnavailableUnits']!;
