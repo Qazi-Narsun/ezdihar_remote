@@ -22,7 +22,8 @@ class LanguageToggle extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5.25, sigmaY: 5.25),
         child: Container(
-          height: 56,
+          // Figma 225:313: 48 high, 40 high segments.
+          height: 48,
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: AppColors.glass,
@@ -76,7 +77,7 @@ class _Segment extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: borderRadius,
-        child: Container(height: 48, alignment: Alignment.center, padding: const EdgeInsets.symmetric(horizontal: 24), child: child),
+        child: Container(height: 40, alignment: Alignment.center, padding: const EdgeInsets.symmetric(horizontal: 16), child: child),
       ),
     );
   }

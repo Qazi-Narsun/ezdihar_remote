@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 abstract final class AppColors {
   static const accent = Color(0xFFCA936B);
 
+  /// Bars around the app canvas on screens that are not 16:10.
+  static const letterbox = Color(0xFF000000);
+
   /// Dark brown frosted-glass fill (brown @ 64%) used by pills and icon buttons.
   static const glass = Color(0xA32D1C10);
 

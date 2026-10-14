@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_strings.dart';
 import 'l10n/locale_controller.dart';
 import 'screens/initial_screen.dart';
+import 'widgets/app_canvas.dart';
 import 'widgets/directional_page_transitions.dart';
 import 'widgets/idle_reset.dart';
 import 'widgets/locale_fade.dart';
@@ -39,9 +40,11 @@ class MyApp extends StatelessWidget {
     final locale = localeController.locale;
     return MaterialApp(
       navigatorKey: _navigatorKey,
-      builder: (context, child) => LocaleFade(
-        locale: locale,
-        child: IdleReset(navigatorKey: _navigatorKey, child: child!),
+      builder: (context, child) => AppCanvas(
+        child: LocaleFade(
+          locale: locale,
+          child: IdleReset(navigatorKey: _navigatorKey, child: child!),
+        ),
       ),
       title: 'Ezdihar Remote',
       theme: ThemeData(
