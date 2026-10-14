@@ -303,7 +303,8 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 250),
                           transitionBuilder: _panelTransition,
-                          child: _floor != null && _apartment == null
+                          // Hidden on a floor without apartments (type C's GF).
+                          child: _floor != null && _apartment == null && _floorTypes.isNotEmpty
                               ? FitPanel(
                                   key: const ValueKey('apartments'),
                                   child: _ApartmentsPanel(
@@ -366,7 +367,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
         alignment: AlignmentDirectional.bottomStart,
         child: _ApartmentDetailsPanel(
           strings: strings,
-          floor: strings.floorNumber(_floors[_floor!].code),
+          floor: strings.floorName(_floors[_floor!].code),
           type: _floorTypes[_apartment!],
           details: widget.type.apartments[_floorTypes[_apartment!]],
           onClose: _closeApartment,
@@ -379,7 +380,9 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
         maxWidthFactor: 0.45,
         alignment: AlignmentDirectional.bottomStart,
         child: _InfoPanel(
-          title: _floor != null ? strings.floorDetails : strings.buildingTypeTitle(widget.type.type),
+          title: _floor != null
+              ? strings.floorDetailsTitle(_floors[_floor!].code)
+              : strings.buildingTypeTitle(widget.type.type),
           strings: strings,
           type: widget.type,
           buildingId: widget.buildingId,
@@ -765,7 +768,7 @@ class _InfoPanel extends StatelessWidget {
     final f = floorDetails;
     final rows = [
       (strings.buildingNo, buildingId),
-      if (floor != null) (strings.floor, strings.floorNumber(floor!)) else (strings.floors, '${type.floors}'),
+      if (floor != null) (strings.floor, strings.floorName(floor!)) else (strings.floors, '${type.floors}'),
       if (f != null) ...[
         (strings.numberOfApartments, '${f.apartments}'),
         (strings.apartmentTypes, f.apartmentTypes.isEmpty ? '-' : f.apartmentTypes.join(', ')),
@@ -828,7 +831,7 @@ class _ApartmentDetailsPanel extends StatelessWidget {
 
   final AppStrings strings;
 
-  /// Short floor value, e.g. "3" or "Ground".
+  /// Floor name in the sheet's convention, e.g. "3F" or "GF".
   final String floor;
 
   /// Apartment type id, e.g. "2BR"; names the plan image.
@@ -958,7 +961,8 @@ class _ApartmentsPanel extends StatelessWidget {
 
   final AppStrings strings;
 
-  /// Apartment type ids (e.g. "2BR"); the plan image is
+  /// Apartment type ids (e.g. "2BR"), never empty: the panel is hidden on a
+  /// floor without apartments. The plan image is
   /// `assets/images/apartments/<id lower-case>.png`.
   final List<String> apartmentTypes;
   final int? selected;
@@ -1009,24 +1013,12 @@ class _ApartmentsPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              if (apartmentTypes.isEmpty)
-                SizedBox(
-                  height: _ApartmentCard.height,
-                  child: Center(
-                    child: Text(
-                      strings.noApartmentsOnFloor,
-                      textAlign: TextAlign.center,
-                      style: _text(strings, 16, FontWeight.w400, color: AppColors.textSecondary),
-                    ),
-                  ),
-                )
-              else
-                _CardsRow(
-                  strings: strings,
-                  apartmentTypes: apartmentTypes,
-                  selected: selected,
-                  onSelect: onSelect,
-                ),
+              _CardsRow(
+                strings: strings,
+                apartmentTypes: apartmentTypes,
+                selected: selected,
+                onSelect: onSelect,
+              ),
             ],
           ),
         ),
