@@ -99,7 +99,8 @@ keep important content inside x = 100..1820 of the canvas.
     The Filters panel always reserves the Clear filters slot so it does not resize (QA #03).
   - Building detail: `_Breadcrumb` (Masterplan > Building > Floor), `_FloorStepper` (up/down
     while a floor is selected, arrow keys too; centre-end, opposite the start-side panels),
-    selected floor outline is filled (accent @ ~40%), selecting a floor or closing Apartment
+    selected floor outline is filled solid orange, the same on every floor (all outline SVGs
+    share fill-opacity 0.03, boosted x40), selecting a floor or closing Apartment
     Details reopens a collapsed info panel, floor outlines have tooltips, panels swap with
     `AnimatedSwitcher`. Back/system back/Esc close the topmost layer first (apartment, floor)
     via `PopScope`. Floor Details/Building panel uses a collapse chevron (not X); X still means
@@ -175,6 +176,9 @@ Behaviour (not in Figma):
 - Always make code/file changes with direct edits (the Edit/Write tools), never
   with ad-hoc scripts (Python, sed, PowerShell rewrites, etc.).
 - Run `flutter analyze` before finishing.
+- CI (`.github/workflows/android.yml`) runs only on a push to `main` and publishes a release
+  (each run uses a build number). PRs and branches get no CI build: verify locally with
+  `flutter analyze` and `flutter test`.
 
 ## Keep this file current
 When a screen, shared widget, token or convention is added, update the sections above.
