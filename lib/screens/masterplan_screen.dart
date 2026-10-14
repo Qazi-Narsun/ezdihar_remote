@@ -463,6 +463,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                       title: Text(strings.floor, style: _label(strings)),
                       bounds: _floorBounds,
                       values: _floors,
+                      format: (v) => strings.floorNameOfLevel(v.round()),
                       onChanged: (v) => setState(() => _floorsRange = v),
                     ),
                   ),
@@ -997,12 +998,17 @@ class _RangeFilter extends StatelessWidget {
     required this.bounds,
     required this.values,
     required this.onChanged,
+    this.format,
   });
 
   final Widget title;
   final RangeValues bounds;
   final RangeValues values;
   final ValueChanged<RangeValues> onChanged;
+
+  /// Text for a value in the fields below the slider; the rounded number when
+  /// null.
+  final String Function(double value)? format;
 
   @override
   Widget build(BuildContext context) {
@@ -1031,12 +1037,12 @@ class _RangeFilter extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _ValueField(strings: strings, value: values.start)),
+            Expanded(child: _ValueField(strings: strings, value: values.start, format: format)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: SvgPicture.asset('assets/images/masterplan/range_dash.svg'),
             ),
-            Expanded(child: _ValueField(strings: strings, value: values.end)),
+            Expanded(child: _ValueField(strings: strings, value: values.end, format: format)),
           ],
         ),
       ],
@@ -1076,10 +1082,11 @@ class _HaloThumbShape extends RangeSliderThumbShape {
 }
 
 class _ValueField extends StatelessWidget {
-  const _ValueField({required this.strings, required this.value});
+  const _ValueField({required this.strings, required this.value, this.format});
 
   final AppStrings strings;
   final double value;
+  final String Function(double value)? format;
 
   @override
   Widget build(BuildContext context) {
@@ -1091,7 +1098,7 @@ class _ValueField extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
-        value.round().toString(),
+        format?.call(value) ?? value.round().toString(),
         style: _MasterplanScreenState._text(strings, 16, FontWeight.w400, spacing: -0.16)
             .copyWith(color: AppColors.textSecondary),
       ),

@@ -67,11 +67,13 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
   obsolete). The selection indexes the type's floors top first (6F..GF); the floor stepper
   and arrow keys cover every floor in the data. Outline SVG i (top to bottom) is tappable as
   floor i; floors without an outline (GF on the current photo) are reached with the stepper;
-  tap empty space clears. Floors are named from the sheet code (`AppStrings.floorName` /
-  `floorNumber`, "GF" = Ground). Selected floor swaps the info panel for
-  "Floor Details" (that floor's apartments, types and area) and opens the `_ApartmentsPanel`
+  tap empty space clears. Floors are labelled everywhere (title, breadcrumb, stepper, tooltips,
+  panels, masterplan floor filter) with the sheet's names via `AppStrings.floorName` /
+  `floorNameOfLevel`: English "GF", "1F".."6F", Arabic "الأرضي", "ط1".."ط6". Selected floor swaps
+  the info panel for "<floor> Details" (`floorDetailsTitle`: that floor's apartments, types and
+  area) and opens the `_ApartmentsPanel`
   (bottom-centre): a drag-scrollable row of cards (plan + bedrooms label), one per apartment
-  type on that floor (empty floor shows a message), loaded from
+  type on that floor (hidden entirely on a floor with no apartments, e.g. type C's GF), loaded from
   `assets/images/apartments/<type id lower-case>.png` (1br..4br; currently copies
   of the placeholder plan, replace with real plans). Floor Details X only
   collapses the panel (info button reopens); Apartments X clears the selection.

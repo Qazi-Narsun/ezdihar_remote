@@ -46,7 +46,6 @@ class AppStrings {
     'areaUnit': 'M²',
     'restart': 'Restart',
     'buildingInfo': 'Building info',
-    'floorDetails': 'Floor Details',
     'apartments': 'Apartments',
     'selectApartment': 'Select your preferred apartment to start tour',
     'apartmentDetails': 'Apartment Details',
@@ -91,14 +90,14 @@ class AppStrings {
     'browseMore': 'Browse more units',
     'loadError': 'Could not load building data',
     'retry': 'Retry',
-    'ground': 'Ground',
-    'groundFloor': 'Ground Floor',
+    'groundFloorCode': 'GF',
+    'floorCode': '{n}F',
+    'floorDetailsTitle': '{floor} Details',
     'floorArea': 'Floor Area',
     'area': 'Area',
     'size': 'Size',
     'available': 'Available',
     'unavailable': 'Not Available',
-    'noApartmentsOnFloor': 'There are no apartments on this floor',
   };
 
   static const _ar = {
@@ -136,7 +135,6 @@ class AppStrings {
     'areaUnit': 'م²',
     'restart': 'إعادة',
     'buildingInfo': 'معلومات المبنى',
-    'floorDetails': 'تفاصيل الطابق',
     'apartments': 'الشقق',
     'selectApartment': 'اختر الشقة المفضلة لديك لبدء الجولة',
     'apartmentDetails': 'تفاصيل الشقة',
@@ -181,14 +179,14 @@ class AppStrings {
     'browseMore': 'تصفح المزيد من الوحدات',
     'loadError': 'تعذّر تحميل بيانات المباني',
     'retry': 'إعادة المحاولة',
-    'ground': 'الأرضي',
-    'groundFloor': 'الطابق الأرضي',
+    'groundFloorCode': 'الأرضي',
+    'floorCode': 'ط{n}',
+    'floorDetailsTitle': 'تفاصيل {floor}',
     'floorArea': 'مساحة الطابق',
     'area': 'المساحة',
     'size': 'المساحة',
     'available': 'متاحة',
     'unavailable': 'غير متاحة',
-    'noApartmentsOnFloor': 'لا توجد شقق في هذا الطابق',
   };
 
   static AppStrings of(BuildContext context) =>
@@ -229,7 +227,6 @@ class AppStrings {
   String get areaUnit => _values['areaUnit']!;
   String get restart => _values['restart']!;
   String get buildingInfo => _values['buildingInfo']!;
-  String get floorDetails => _values['floorDetails']!;
   String get apartments => _values['apartments']!;
   String get selectApartment => _values['selectApartment']!;
   String get apartmentDetails => _values['apartmentDetails']!;
@@ -275,13 +272,20 @@ class AppStrings {
   String get size => _values['size']!;
   String get available => _values['available']!;
   String get unavailable => _values['unavailable']!;
-  String get noApartmentsOnFloor => _values['noApartmentsOnFloor']!;
 
-  /// Short floor value for a sheet floor code: "Ground" for "GF", "3" for "3F".
-  String floorNumber(String code) => code == 'GF' ? _values['ground']! : code.replaceAll(RegExp(r'\D'), '');
+  /// Floor name in the project sheet's convention: English uses the sheet
+  /// code as is ("GF", "1F".."6F"); Arabic uses the same short form
+  /// ("الأرضي", "ط1".."ط6").
+  String floorName(String code) => code == 'GF'
+      ? _values['groundFloorCode']!
+      : _values['floorCode']!.replaceAll('{n}', code.replaceAll(RegExp(r'\D'), ''));
 
-  /// Floor name for a sheet floor code: "Ground Floor" or "Floor 3".
-  String floorName(String code) => code == 'GF' ? _values['groundFloor']! : '$floor ${floorNumber(code)}';
+  /// Floor name for a floor level (0 = ground), e.g. on the floor filter.
+  String floorNameOfLevel(int level) => floorName(level == 0 ? 'GF' : '${level}F');
+
+  /// Floor Details panel title, e.g. "1F Details".
+  String floorDetailsTitle(String code) =>
+      _values['floorDetailsTitle']!.replaceAll('{floor}', floorName(code));
   String matchCount(int n, int total) =>
       _values['matchCount']!.replaceAll('{n}', '$n').replaceAll('{total}', '$total');
   String stillThereBody(int seconds) => _values['stillThereBody']!.replaceAll('{s}', '$seconds');
