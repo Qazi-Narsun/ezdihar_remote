@@ -185,9 +185,10 @@ Behaviour (not in Figma):
 - Always make code/file changes with direct edits (the Edit/Write tools), never
   with ad-hoc scripts (Python, sed, PowerShell rewrites, etc.).
 - Run `flutter analyze` before finishing.
-- CI (`.github/workflows/android.yml`) runs only on a push to `main` and publishes a release
-  (each run uses a build number). PRs and branches get no CI build: verify locally with
-  `flutter analyze` and `flutter test`.
+- CI (`.github/workflows/android.yml`) runs only on a push to the `release` branch (or a manual
+  run) and publishes a release (each run uses a build number). "Make a release" = fast-forward
+  `release` to the latest `main` and push it. main, PRs and other branches get no CI build:
+  verify locally with `flutter analyze` and `flutter test`.
 
 ## Keep this file current
 When a screen, shared widget, token or convention is added, update the sections above.

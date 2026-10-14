@@ -1,10 +1,12 @@
 name: Android build
 
-# Only a push to main (a merged PR) builds; every such build becomes a release.
-# Pull requests and other branches are verified locally (flutter analyze + tests).
+# Only a push to the `release` branch (or a manual run) builds; every such build becomes a release.
+# To release: fast-forward `release` to main and push it.
+# main, pull requests and other branches are verified locally (flutter analyze + tests).
 on:
   push:
-    branches: [main]
+    branches: [release]
+  workflow_dispatch:
 
 concurrency:
   group: android-${{ github.ref }}
