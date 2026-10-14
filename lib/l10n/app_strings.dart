@@ -41,8 +41,8 @@ class AppStrings {
     'buildingTypeTitle': 'Building Type {type}',
     'buildingNo': 'Building no.',
     'floors': 'Floors',
-    'numberOfApartments': 'Numbers of Apartment',
-    'apartmentType': 'Apartment Type',
+    'numberOfApartments': 'Number of Apartments',
+    'apartmentTypes': 'Apartment Types',
     'totalArea': 'Total Area',
     'areaUnit': 'M²',
     'restart': 'Restart',
@@ -96,6 +96,7 @@ class AppStrings {
     'groundFloor': 'Ground Floor',
     'floorArea': 'Floor Area',
     'area': 'Area',
+    'size': 'Size',
     'available': 'Available',
     'unavailable': 'Not Available',
     'noApartmentsOnFloor': 'There are no apartments on this floor',
@@ -132,7 +133,7 @@ class AppStrings {
     'buildingNo': 'رقم المبنى',
     'floors': 'الطوابق',
     'numberOfApartments': 'عدد الشقق',
-    'apartmentType': 'نوع الشقة',
+    'apartmentTypes': 'أنواع الشقق',
     'totalArea': 'المساحة الإجمالية',
     'areaUnit': 'م²',
     'restart': 'إعادة',
@@ -186,6 +187,7 @@ class AppStrings {
     'groundFloor': 'الطابق الأرضي',
     'floorArea': 'مساحة الطابق',
     'area': 'المساحة',
+    'size': 'المساحة',
     'available': 'متاحة',
     'unavailable': 'غير متاحة',
     'noApartmentsOnFloor': 'لا توجد شقق في هذا الطابق',
@@ -225,7 +227,7 @@ class AppStrings {
   String get buildingNo => _values['buildingNo']!;
   String get floors => _values['floors']!;
   String get numberOfApartments => _values['numberOfApartments']!;
-  String get apartmentType => _values['apartmentType']!;
+  String get apartmentTypes => _values['apartmentTypes']!;
   String get totalArea => _values['totalArea']!;
   String get areaUnit => _values['areaUnit']!;
   String get restart => _values['restart']!;
@@ -273,6 +275,7 @@ class AppStrings {
   String get retry => _values['retry']!;
   String get floorArea => _values['floorArea']!;
   String get area => _values['area']!;
+  String get size => _values['size']!;
   String get available => _values['available']!;
   String get unavailable => _values['unavailable']!;
   String get noApartmentsOnFloor => _values['noApartmentsOnFloor']!;

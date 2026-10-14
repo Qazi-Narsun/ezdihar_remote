@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 /// Slides a slightly zoomed-in [child] sideways for each rotate step. It stands
 /// in for turning the view until real 360 frames exist.
 ///
-/// With [onStep] set, dragging the view horizontally also turns it: every
-/// [dragPerStep] pixels dragged calls [onStep] with -1 (dragged right, as the
-/// scene follows the finger) or +1 (dragged left).
+/// With [onStep] set, dragging the view horizontally pans it with the finger
+/// (1:1, clamped to the zoom slack); on release it settles on the nearest step
+/// and reports the steps moved through [onStep] (negative when dragged right,
+/// as the scene follows the finger).
 class RotatingView extends StatefulWidget {
   const RotatingView({
     super.key,
@@ -21,22 +22,14 @@ class RotatingView extends StatefulWidget {
   final ValueChanged<int>? onStep;
 
   static const _zoom = 1.2;
-  static const dragPerStep = 120.0;
 
   @override
   State<RotatingView> createState() => _RotatingViewState();
 }
 
 class _RotatingViewState extends State<RotatingView> {
-  double _drag = 0;
-
-  void _onDrag(DragUpdateDetails details) {
-    _drag += details.delta.dx;
-    while (_drag.abs() >= RotatingView.dragPerStep) {
-      widget.onStep!(_drag > 0 ? -1 : 1);
-      _drag -= RotatingView.dragPerStep * _drag.sign;
-    }
-  }
+  /// Finger offset of the drag in progress (null when not dragging).
+  double? _drag;
 
   @override
   Widget build(BuildContext context) {
@@ -44,12 +37,14 @@ class _RotatingViewState extends State<RotatingView> {
       builder: (context, constraints) {
         // Slack created by the zoom, split evenly across +/- maxTurns.
         final slack = constraints.maxWidth * (RotatingView._zoom - 1) / 2;
-        final dx = -slack * widget.turns / widget.maxTurns;
+        final base = -slack * widget.turns / widget.maxTurns;
+        final dragging = _drag != null;
+        final dx = (base + (_drag ?? 0)).clamp(-slack, slack);
         final view = ClipRect(
           child: TweenAnimationBuilder<double>(
             tween: Tween(end: dx),
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeInOut,
+            duration: dragging ? Duration.zero : const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
             builder: (context, value, child) => Transform.translate(
               offset: Offset(value, 0),
               child: Transform.scale(scale: RotatingView._zoom, child: child),
@@ -58,12 +53,30 @@ class _RotatingViewState extends State<RotatingView> {
           ),
         );
         if (widget.onStep == null) return view;
+        final perStep = slack / widget.maxTurns;
         return GestureDetector(
-          onHorizontalDragStart: (_) => _drag = 0,
-          onHorizontalDragUpdate: _onDrag,
+          onHorizontalDragStart: (_) => setState(() => _drag = 0),
+          onHorizontalDragUpdate: (d) => setState(() => _drag = (_drag ?? 0) + d.delta.dx),
+          onHorizontalDragEnd: (d) => _settle(
+            (base + (_drag ?? 0)).clamp(-slack, slack),
+            base,
+            perStep,
+            d.primaryVelocity ?? 0,
+          ),
+          onHorizontalDragCancel: () => setState(() => _drag = null),
           child: view,
         );
       },
     );
+  }
+
+  /// Snaps to the nearest step (a fling carries one step further).
+  void _settle(double dx, double base, double perStep, double velocity) {
+    var steps = perStep == 0 ? 0 : ((base - dx) / perStep).round();
+    if (velocity.abs() > 600 && steps == 0) steps = velocity > 0 ? -1 : 1;
+    final turns = (widget.turns + steps).clamp(-widget.maxTurns, widget.maxTurns);
+    setState(() => _drag = null);
+    final delta = turns - widget.turns;
+    if (delta != 0) widget.onStep!(delta);
   }
 }
