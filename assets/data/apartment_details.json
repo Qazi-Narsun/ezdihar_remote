@@ -1,0 +1,31 @@
+{
+  "title": "Apartment Details",
+  "note": "One entry per apartment type of a building type (the sheet has one area per type, not per apartment). `floor` is the sample floor the sheet lists for that type; the area applies to the type on every floor.",
+  "buildingTypes": [
+    {
+      "type": "A",
+      "apartments": [
+        { "unitType": "1BR", "floor": "GF", "area": { "value": 72.14, "unit": "m2" }, "available": true },
+        { "unitType": "2BR", "floor": "6F", "area": { "value": 135.83, "unit": "m2" }, "available": true },
+        { "unitType": "3BR", "floor": "GF", "area": { "value": 143.8, "unit": "m2" }, "available": true },
+        { "unitType": "4BR", "floor": "1F", "area": { "value": 195, "unit": "m2" }, "available": true }
+      ]
+    },
+    {
+      "type": "B",
+      "apartments": [
+        { "unitType": "2BR", "floor": "6F", "area": { "value": 135.85, "unit": "m2" }, "available": true },
+        { "unitType": "3BR", "floor": "1F", "area": { "value": 162.58, "unit": "m2" }, "available": true },
+        { "unitType": "4BR", "floor": "GF", "area": { "value": 173.93, "unit": "m2" }, "available": true }
+      ]
+    },
+    {
+      "type": "C",
+      "apartments": [
+        { "unitType": "1BR", "floor": "1F", "area": { "value": 76.88, "unit": "m2" }, "available": true },
+        { "unitType": "2BR", "floor": "1F", "area": { "value": 126.65, "unit": "m2" }, "available": true },
+        { "unitType": "3BR", "floor": "1F", "area": { "value": 159, "unit": "m2" }, "available": true }
+      ]
+    }
+  ]
+}

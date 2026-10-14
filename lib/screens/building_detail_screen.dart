@@ -57,7 +57,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
   bool _panelOpen = true;
   int _frame = 0;
 
-  /// Index of the selected floor outline, or null when none is selected.
+  /// Index into [_floors] of the selected floor, or null when none is selected.
   int? _floor;
   int? _apartment;
 
@@ -84,6 +84,15 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
 
   bool get _hasLayer => _floor != null || _apartment != null;
 
+  /// The building's floors from the data, top floor first, so [_floor]
+  /// indexes this list and outline i (drawn top to bottom) is floor i. The
+  /// data is the source of truth: floors without an outline on the photo
+  /// (the ground floor) are reached with the floor stepper.
+  late final List<FloorDetails> _floors = widget.type.floorDetails.reversed.toList();
+
+  /// Apartment types on the selected floor.
+  List<String> get _floorTypes => _floors[_floor!].apartmentTypes;
+
   void _selectFloor(int? floor) {
     if (floor != null) _dismissHint();
     setState(() {
@@ -92,10 +101,10 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
     });
   }
 
-  /// Steps the selected floor outline by [delta] (-1 is the one drawn above).
+  /// Steps the selected floor by [delta] (-1 is the floor above).
   void _stepFloor(int delta) {
     final next = _floor! + delta;
-    if (next >= 0 && next < _ExteriorCanvas.outlineCount) _selectFloor(next);
+    if (next >= 0 && next < _floors.length) _selectFloor(next);
   }
 
   void _closeTopLayer() {
@@ -154,9 +163,10 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                     child: _ExteriorCanvas(
                       frame: _frames[_frame],
                       showOutlines: _frame == 0,
+                      floorCount: _floors.length,
                       selected: _floor,
                       onSelect: _selectFloor,
-                      floorLabel: (i) => '${strings.floor} ${i + 1}',
+                      floorLabel: (i) => strings.floorName(_floors[i].code),
                     ),
                   ),
                 ),
@@ -186,7 +196,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                                   child: _Breadcrumb(
                                     strings: strings,
                                     buildingId: widget.buildingId,
-                                    floor: _floor == null ? null : _floor! + 1,
+                                    floor: _floor == null ? null : strings.floorName(_floors[_floor!].code),
                                     onMasterplan: () => Navigator.of(context).pop(),
                                     onBuilding: () => _selectFloor(null),
                                   ),
@@ -247,9 +257,9 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                           alignment: Alignment.centerRight,
                           child: _FloorStepper(
                             strings: strings,
-                            floor: _floor! + 1,
+                            floor: strings.floorName(_floors[_floor!].code),
                             onUp: _floor! > 0 ? () => _stepFloor(-1) : null,
-                            onDown: _floor! < _ExteriorCanvas.outlineCount - 1 ? () => _stepFloor(1) : null,
+                            onDown: _floor! < _floors.length - 1 ? () => _stepFloor(1) : null,
                           ),
                         ),
                       Align(
@@ -274,7 +284,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                                   key: const ValueKey('apartments'),
                                   child: _ApartmentsPanel(
                                     strings: strings,
-                                    apartmentTypes: widget.type.apartmentTypes,
+                                    apartmentTypes: _floorTypes,
                                     selected: _apartment,
                                     onSelect: (i) => setState(() => _apartment = i),
                                     onClose: () => _selectFloor(null),
@@ -332,8 +342,9 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
         alignment: AlignmentDirectional.bottomStart,
         child: _ApartmentDetailsPanel(
           strings: strings,
-          floor: _floor! + 1,
-          type: widget.type.apartmentTypes[_apartment!],
+          floor: strings.floorNumber(_floors[_floor!].code),
+          type: _floorTypes[_apartment!],
+          details: widget.type.apartments[_floorTypes[_apartment!]],
           onClose: () => setState(() => _apartment = null),
         ),
       );
@@ -348,7 +359,8 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
           strings: strings,
           type: widget.type,
           buildingId: widget.buildingId,
-          floor: _floor == null ? null : _floor! + 1,
+          floor: _floor == null ? null : _floors[_floor!].code,
+          floorDetails: _floor == null ? null : _floors[_floor!],
           // Only collapses the panel; the floor stays selected.
           onCollapse: () => setState(() => _panelOpen = false),
         ),
@@ -386,7 +398,9 @@ class _Breadcrumb extends StatelessWidget {
 
   final AppStrings strings;
   final String buildingId;
-  final int? floor;
+
+  /// Floor name (e.g. "Floor 3"), or null when no floor is selected.
+  final String? floor;
   final VoidCallback onMasterplan;
   final VoidCallback onBuilding;
 
@@ -396,7 +410,7 @@ class _Breadcrumb extends StatelessWidget {
     final segments = [
       (strings.masterplan, onMasterplan),
       ('${strings.buildingNo} $buildingId', floor == null ? null : onBuilding),
-      if (floor != null) ('${strings.floor} $floor', null),
+      if (floor != null) (floor!, null),
     ];
     return ClipRRect(
       borderRadius: radius,
@@ -454,7 +468,9 @@ class _FloorStepper extends StatelessWidget {
   });
 
   final AppStrings strings;
-  final int floor;
+
+  /// Floor name, e.g. "Floor 3".
+  final String floor;
   final VoidCallback? onUp;
   final VoidCallback? onDown;
 
@@ -474,7 +490,7 @@ class _FloorStepper extends StatelessWidget {
       children: [
         arrow(Icons.keyboard_arrow_up_rounded, strings.previousFloor, onUp),
         const SizedBox(height: 8),
-        Text('${strings.floor} $floor', style: _text(strings, 14, FontWeight.w500, spacing: 0.28)),
+        Text(floor, style: _text(strings, 14, FontWeight.w500, spacing: 0.28)),
         const SizedBox(height: 8),
         arrow(Icons.keyboard_arrow_down_rounded, strings.nextFloor, onDown),
       ],
@@ -488,6 +504,7 @@ class _ExteriorCanvas extends StatelessWidget {
   const _ExteriorCanvas({
     required this.frame,
     required this.showOutlines,
+    required this.floorCount,
     required this.selected,
     required this.onSelect,
     required this.floorLabel,
@@ -495,6 +512,10 @@ class _ExteriorCanvas extends StatelessWidget {
 
   final String frame;
   final bool showOutlines;
+
+  /// Floors in the data; outline i (top to bottom) is floor i, and outlines
+  /// beyond the data's floors are not drawn.
+  final int floorCount;
   final int? selected;
   final ValueChanged<int?> onSelect;
 
@@ -514,8 +535,6 @@ class _ExteriorCanvas extends StatelessWidget {
     (box: Rect.fromLTWH(608, 616, 210, 63), inset: (5.05, 1.43, 11.22, 3.33)),
   ];
 
-  static int get outlineCount => _outlines.length;
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -528,7 +547,7 @@ class _ExteriorCanvas extends StatelessWidget {
           child: FadeInAsset(frame),
         ),
         if (showOutlines)
-          for (var i = 0; i < _outlines.length; i++)
+          for (var i = 0; i < _outlines.length && i < floorCount; i++)
             _positioned(i, _outlines[i].box, _outlines[i].inset, '$_assets/floor_outline_${i + 1}.svg'),
       ],
     );
@@ -572,6 +591,7 @@ class _InfoPanel extends StatelessWidget {
     required this.buildingId,
     required this.onCollapse,
     this.floor,
+    this.floorDetails,
   });
 
   final AppStrings strings;
@@ -580,18 +600,29 @@ class _InfoPanel extends StatelessWidget {
   final String buildingId;
   final VoidCallback onCollapse;
 
-  /// When set the panel shows floor details instead of building details.
-  final int? floor;
+  /// Sheet floor code ("GF", "1F"...). When set the panel shows floor details
+  /// instead of building details.
+  final String? floor;
+
+  /// Data for [floor]; the building's figures are shown when it is missing.
+  final FloorDetails? floorDetails;
 
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(32);
+    final f = floorDetails;
     final rows = [
       (strings.buildingNo, buildingId),
-      if (floor != null) (strings.floor, '$floor') else (strings.floors, '${type.floors}'),
-      (strings.numberOfApartments, '${type.apartmentsPerBuilding}'),
-      (strings.apartmentType, type.apartmentTypes.join(', ')),
-      (strings.totalArea, '${type.totalArea} ${strings.areaUnit}'),
+      if (floor != null) (strings.floor, strings.floorNumber(floor!)) else (strings.floors, '${type.floors}'),
+      if (f != null) ...[
+        (strings.numberOfApartments, '${f.apartments}'),
+        (strings.apartmentType, f.apartmentTypes.isEmpty ? '-' : f.apartmentTypes.join(', ')),
+        (strings.floorArea, '${f.area} ${strings.areaUnit}'),
+      ] else ...[
+        (strings.numberOfApartments, '${type.apartmentsPerBuilding}'),
+        (strings.apartmentType, type.apartmentTypes.join(', ')),
+        (strings.totalArea, '${type.totalArea} ${strings.areaUnit}'),
+      ],
     ];
     return ClipRRect(
       borderRadius: radius,
@@ -633,26 +664,40 @@ class _InfoPanel extends StatelessWidget {
   }
 }
 
-/// Details of the tapped apartment (Figma 59:454). Availability is skipped.
+/// Details of the tapped apartment (Figma 59:454).
 class _ApartmentDetailsPanel extends StatelessWidget {
   const _ApartmentDetailsPanel({
     required this.strings,
     required this.floor,
     required this.type,
+    required this.details,
     required this.onClose,
   });
 
   final AppStrings strings;
-  final int floor;
+
+  /// Short floor value, e.g. "3" or "Ground".
+  final String floor;
 
   /// Apartment type id, e.g. "2BR"; names the plan image.
   final String type;
+
+  /// Area and availability of [type]; those rows are left out when missing.
+  final ApartmentDetails? details;
   final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(32);
-    final rows = [(strings.floor, '$floor'), (strings.type, type)];
+    final d = details;
+    final rows = [
+      (strings.floor, floor),
+      (strings.type, type),
+      if (d != null) ...[
+        (strings.area, '${d.area} ${strings.areaUnit}'),
+        (strings.availability, d.available ? strings.available : strings.unavailable),
+      ],
+    ];
     return ClipRRect(
       borderRadius: radius,
       child: BackdropFilter(
@@ -811,12 +856,24 @@ class _ApartmentsPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              _CardsRow(
-                strings: strings,
-                apartmentTypes: apartmentTypes,
-                selected: selected,
-                onSelect: onSelect,
-              ),
+              if (apartmentTypes.isEmpty)
+                SizedBox(
+                  height: _ApartmentCard.height,
+                  child: Center(
+                    child: Text(
+                      strings.noApartmentsOnFloor,
+                      textAlign: TextAlign.center,
+                      style: _text(strings, 16, FontWeight.w400, color: AppColors.textSecondary),
+                    ),
+                  ),
+                )
+              else
+                _CardsRow(
+                  strings: strings,
+                  apartmentTypes: apartmentTypes,
+                  selected: selected,
+                  onSelect: onSelect,
+                ),
             ],
           ),
         ),
