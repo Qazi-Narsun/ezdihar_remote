@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../data/building_data.dart';
 import '../l10n/app_strings.dart';
+import '../services/ui_feedback.dart';
 import '../theme/app_colors.dart';
 import '../widgets/fade_in_asset.dart';
 import '../widgets/fit_panel.dart';
@@ -52,17 +54,36 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
   int _turns = 0;
   final _view = GlobalKey<RotatingViewState>();
 
-  // Filter state (the map has no unit data yet, so it is only held here).
-  RangeValues _floors = _floorBounds;
-  RangeValues _surface = _surfaceBounds;
+  // Filter state. The filters select apartments; a building is lit when it has
+  // at least one apartment that passes all of them. null = the full range.
+  RangeValues? _floorsRange;
+  RangeValues? _surfaceRange;
   bool _hideUnavailable = false;
   final Set<String> _buildingTypes = {};
   int _selectedImage = 0;
 
-  static const _floorBounds = RangeValues(3, 26);
-  static const _surfaceBounds = RangeValues(141, 400);
-
   List<BuildingType> _types = const [];
+
+  /// Slider bounds come from the loaded data: floor levels (0 = ground) and
+  /// apartment areas (rounded outwards to whole numbers).
+  RangeValues get _floorBounds =>
+      _bounds(_types.expand((t) => t.floorDetails).map((f) => f.level.toDouble()));
+  RangeValues get _surfaceBounds =>
+      _bounds(_types.expand((t) => t.apartments.values).map((a) => a.area), whole: true);
+
+  static RangeValues _bounds(Iterable<double> values, {bool whole = false}) {
+    if (values.isEmpty) return const RangeValues(0, 1);
+    var lo = values.reduce(math.min);
+    var hi = values.reduce(math.max);
+    if (whole) {
+      lo = lo.floorToDouble();
+      hi = hi.ceilToDouble();
+    }
+    return RangeValues(lo, hi > lo ? hi : lo + 1);
+  }
+
+  RangeValues get _floors => _floorsRange ?? _floorBounds;
+  RangeValues get _surface => _surfaceRange ?? _surfaceBounds;
   bool _loadFailed = false;
 
   /// "Tap a building" hint (and the pulse on the buttons); dropped on the
@@ -120,18 +141,30 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
     if (_hintVisible && mounted) setState(() => _hintVisible = false);
   }
 
-  /// Building types and floor range are the filters that apply to a building;
-  /// surface and availability need per-unit data that does not exist yet.
-  bool get _filtersActive => _buildingTypes.isNotEmpty || _floors != _floorBounds;
+  bool get _filtersActive =>
+      _buildingTypes.isNotEmpty || _floorsRange != null || _surfaceRange != null || _hideUnavailable;
 
   bool _matches(BuildingType t) =>
-      (_buildingTypes.isEmpty || _buildingTypes.contains(t.type)) &&
-      t.floors >= _floors.start &&
-      t.floors <= _floors.end;
+      (_buildingTypes.isEmpty || _buildingTypes.contains(t.type)) && _hasMatchingApartment(t);
+
+  /// True when [t] has an apartment on a floor in the floor range, with an
+  /// area in the size range, and available when unavailable ones are hidden.
+  bool _hasMatchingApartment(BuildingType t) {
+    bool fits(String unitType) {
+      final a = t.apartments[unitType];
+      if (a == null) return false;
+      return a.area >= _surface.start && a.area <= _surface.end && (!_hideUnavailable || a.available);
+    }
+
+    if (t.floorDetails.isEmpty) return t.apartments.keys.any(fits);
+    return t.floorDetails.any(
+      (f) => f.level >= _floors.start && f.level <= _floors.end && f.apartmentTypes.any(fits),
+    );
+  }
 
   void _clearFilters() => setState(() {
-        _floors = _floorBounds;
-        _surface = _surfaceBounds;
+        _floorsRange = null;
+        _surfaceRange = null;
         _hideUnavailable = false;
         _buildingTypes.clear();
       });
@@ -178,6 +211,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
 
   void _togglePanel(_MasterplanPanel panel) {
     _dismissHint();
+    _panel == panel ? UiFeedback.dismiss() : UiFeedback.select();
     setState(() => _panel = _panel == panel ? null : panel);
   }
 
@@ -190,6 +224,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
   /// A drag on the map settled on a new step (only at 1x).
   void _onStep(int delta) {
     _dismissHint();
+    UiFeedback.step();
     setState(() => _turns = (_turns + delta).clamp(-_maxTurns, _maxTurns));
   }
 
@@ -400,7 +435,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                 // Space is always reserved so the panel keeps its size when
                 // the first filter is applied.
                 Visibility(
-                  visible: _filtersActive || _hideUnavailable,
+                  visible: _filtersActive,
                   maintainSize: true,
                   maintainAnimation: true,
                   maintainState: true,
@@ -428,7 +463,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                       title: Text(strings.floor, style: _label(strings)),
                       bounds: _floorBounds,
                       values: _floors,
-                      onChanged: (v) => setState(() => _floors = v),
+                      onChanged: (v) => setState(() => _floorsRange = v),
                     ),
                   ),
                   const SizedBox(width: 32),
@@ -456,7 +491,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                       ),
                       bounds: _surfaceBounds,
                       values: _surface,
-                      onChanged: (v) => setState(() => _surface = v),
+                      onChanged: (v) => setState(() => _surfaceRange = v),
                     ),
                   ),
                 ],
@@ -561,7 +596,10 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                   itemBuilder: (context, i) => _GalleryTile(
                     image: '$_assets/${images[i]}',
                     selected: i == _selectedImage,
-                    onTap: () => setState(() => _selectedImage = i),
+                    onTap: () {
+                      UiFeedback.tap();
+                      setState(() => _selectedImage = i);
+                    },
                   ),
                 ),
               ),
@@ -719,7 +757,7 @@ class _BuildingButtonState extends State<_BuildingButton> {
         onTapCancel: () => setState(() => _pressed = false),
         onTap: () {
           setState(() => _pressed = false);
-          HapticFeedback.selectionClick();
+          UiFeedback.select();
           widget.onTap();
         },
         child: Semantics(
@@ -1072,7 +1110,10 @@ class _CheckOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
     return InkWell(
-      onTap: () => onChanged(!checked),
+      onTap: () {
+        UiFeedback.tap();
+        onChanged(!checked);
+      },
       borderRadius: BorderRadius.circular(6),
       child: Row(
         mainAxisSize: MainAxisSize.min,

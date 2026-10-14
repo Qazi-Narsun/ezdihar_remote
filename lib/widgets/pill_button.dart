@@ -1,9 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/ui_feedback.dart';
 import '../theme/app_colors.dart';
 
 /// Blurred, rounded call-to-action button.
@@ -38,7 +38,7 @@ class PillButton extends StatelessWidget {
             onTap: onPressed == null
                 ? null
                 : () {
-                    HapticFeedback.selectionClick();
+                    UiFeedback.select();
                     onPressed!();
                   },
             borderRadius: radius,

@@ -1,9 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../l10n/app_strings.dart';
+import '../services/ui_feedback.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 
@@ -98,7 +98,7 @@ class DialogButton extends StatelessWidget {
       child: InkWell(
         borderRadius: radius,
         onTap: () {
-          HapticFeedback.selectionClick();
+          filled ? UiFeedback.select() : UiFeedback.dismiss();
           onTap();
         },
         child: Padding(

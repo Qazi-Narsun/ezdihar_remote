@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../l10n/app_strings.dart';
+import '../services/ui_feedback.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/language_toggle.dart';
@@ -228,7 +229,10 @@ class _ProjectCallout extends StatelessWidget {
           left: 1481,
           top: 198,
           child: GestureDetector(
-            onTap: onTap,
+            onTap: () {
+              UiFeedback.select();
+              onTap();
+            },
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 14, 22, 14),
               decoration: BoxDecoration(

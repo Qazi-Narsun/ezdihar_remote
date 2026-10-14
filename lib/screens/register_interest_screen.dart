@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../l10n/app_strings.dart';
+import '../services/ui_feedback.dart';
 import '../theme/app_colors.dart';
 import '../widgets/fit_panel.dart';
 import '../widgets/panel_close_button.dart';
@@ -125,8 +126,10 @@ class _RegisterInterestScreenState extends State<RegisterInterestScreen> {
     setState(() => _submitted = true);
     if (_nameValid && _emailValid && _phoneValid) {
       _closing = true;
+      UiFeedback.success();
       Navigator.of(context).pop(true);
     } else {
+      UiFeedback.error();
       // Take the visitor to the first field that needs attention.
       (!_nameValid ? _nameFocus : !_emailValid ? _emailFocus : _phoneFocus).requestFocus();
     }
@@ -227,10 +230,7 @@ class _RegisterInterestScreenState extends State<RegisterInterestScreen> {
                             ),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(80),
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                _submit();
-                              },
+                              onTap: _submit,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 20),
                                 child: Center(
@@ -452,7 +452,7 @@ class _InterestRegisteredScreenState extends State<InterestRegisteredScreen> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(80),
                       onTap: () {
-                        HapticFeedback.selectionClick();
+                        UiFeedback.select();
                         _restart();
                       },
                       child: Padding(
@@ -484,7 +484,7 @@ class _InterestRegisteredScreenState extends State<InterestRegisteredScreen> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(80),
                       onTap: () {
-                        HapticFeedback.selectionClick();
+                        UiFeedback.tap();
                         Navigator.of(context).pop();
                       },
                       child: Padding(

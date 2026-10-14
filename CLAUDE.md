@@ -100,8 +100,9 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
     `popUntil(first)`. `LocaleFade` cross-fades on language change (state is kept).
   - Masterplan: building buttons have a 64px touch target, hover/press feedback, a first-visit
     pulse + "Tap a building" hint (`StatusChip`, gone after 12s or first interaction), and are
-    dimmed when filtered out (building type + floor count apply; surface/availability have no
-    data yet). Chip shows "N of 22 match" / no-match with Clear filters / load error with Retry.
+    dimmed when filtered out (building type, plus floor / size / availability select apartments:
+    a building is lit when one of its apartments passes all of them; slider bounds come from the floor
+    levels and apartment areas in the data). Chip shows "N of 22 match" / no-match with Clear filters / load error with Retry.
     Drag the map (pans 1:1 with the finger, snaps to the nearest step on release) or hold a
     rotate button (`GlassIconButton.repeatEvery`) to rotate; arrow keys rotate, Esc closes the
     panel. Pinch zooms 1x..3x around the fingers, double-tap toggles 2x at that point / 1x, and
@@ -168,9 +169,13 @@ Behaviour (not in Figma):
   fading edges + arrow buttons on the apartment row.
 - Register form: validate-on-blur with error messages, autofill hints, next/done actions,
   country-code picker, digits-only phone, focus first invalid field.
-- Haptic `selectionClick` on glass/pill/dialog buttons.
+- Haptic + subtle sound on every interaction via `UiFeedback` (`lib/services/ui_feedback.dart`).
 
 ## Rules
+- Interaction feedback: call `UiFeedback.tap/select/dismiss/step/success/error()` (haptic + a
+  quiet sound synthesised in code, no audio assets, `audioplayers`); never call `HapticFeedback`
+  directly. `GlassIconButton`, `PillButton`, `PanelCloseButton` and `LanguageToggle` already do
+  it; hold-to-spin buttons (`repeatEvery`) stay silent and their callback plays `step`.
 - Reuse existing widgets/tokens; extend them (new optional param) instead of duplicating.
 - Colours go in `AppColors`; no repeated hex literals in screens/widgets.
 - Every user-visible string goes in `AppStrings` with both `_en` and `_ar` entries.

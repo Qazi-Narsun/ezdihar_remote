@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/ui_feedback.dart';
 import '../theme/app_colors.dart';
 
 enum AppLanguage { english, arabic }
@@ -75,7 +76,10 @@ class _Segment extends StatelessWidget {
       color: selected ? AppColors.accent : Colors.transparent,
       borderRadius: borderRadius,
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          if (!selected) UiFeedback.select();
+          onTap();
+        },
         borderRadius: borderRadius,
         child: Container(height: 40, alignment: Alignment.center, padding: const EdgeInsets.symmetric(horizontal: 16), child: child),
       ),

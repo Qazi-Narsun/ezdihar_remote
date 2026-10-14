@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
+import '../services/ui_feedback.dart';
 import '../theme/app_colors.dart';
 
 /// Round frosted-glass button holding a single icon (e.g. the back button).
@@ -45,7 +45,9 @@ class _GlassIconButtonState extends State<GlassIconButton> {
   }
 
   void _tap() {
-    HapticFeedback.selectionClick();
+    // Hold-to-spin buttons (rotate) are silent here: their callback gives the
+    // per-step cue, so a held button ticks once per step.
+    if (widget.repeatEvery == null) UiFeedback.tap();
     widget.onPressed?.call();
   }
 

@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../data/building_data.dart';
 import '../l10n/app_strings.dart';
+import '../services/ui_feedback.dart';
 import '../theme/app_colors.dart';
 import '../widgets/fade_in_asset.dart';
 import '../widgets/fit_panel.dart';
@@ -143,16 +144,28 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
       child: CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.arrowLeft): () {
-            if (_floor == null) _rotate(-1);
+            if (_floor == null) {
+              UiFeedback.step();
+              _rotate(-1);
+            }
           },
           const SingleActivator(LogicalKeyboardKey.arrowRight): () {
-            if (_floor == null) _rotate(1);
+            if (_floor == null) {
+              UiFeedback.step();
+              _rotate(1);
+            }
           },
           const SingleActivator(LogicalKeyboardKey.arrowUp): () {
-            if (_floor != null) _stepFloor(-1);
+            if (_floor != null) {
+              UiFeedback.step();
+              _stepFloor(-1);
+            }
           },
           const SingleActivator(LogicalKeyboardKey.arrowDown): () {
-            if (_floor != null) _stepFloor(1);
+            if (_floor != null) {
+              UiFeedback.step();
+              _stepFloor(1);
+            }
           },
           const SingleActivator(LogicalKeyboardKey.escape): () {
             _hasLayer ? _closeTopLayer() : Navigator.of(context).maybePop();
@@ -170,6 +183,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                   child: SizedBox.fromSize(
                     size: _canvas,
                     child: _ExteriorCanvas(
+                      pulse: _floor == null,
                       frame: _frames[_frame],
                       showOutlines: _frame == 0,
                       floorCount: _floors.length,
@@ -445,7 +459,12 @@ class _Breadcrumb extends StatelessWidget {
                   ),
                 InkWell(
                   borderRadius: BorderRadius.circular(24),
-                  onTap: segments[i].$2,
+                  onTap: segments[i].$2 == null
+                      ? null
+                      : () {
+                          UiFeedback.dismiss();
+                          segments[i].$2!();
+                        },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     child: Text(
@@ -510,8 +529,9 @@ class _FloorStepper extends StatelessWidget {
 
 /// The building photo with the floor outlines drawn over it, on the Figma
 /// canvas so the outlines stay registered to the photo.
-class _ExteriorCanvas extends StatelessWidget {
+class _ExteriorCanvas extends StatefulWidget {
   const _ExteriorCanvas({
+    required this.pulse,
     required this.frame,
     required this.showOutlines,
     required this.floorCount,
@@ -555,6 +575,45 @@ class _ExteriorCanvas extends StatelessWidget {
     (box: Rect.fromLTWH(608, 616, 210, 63), inset: (5.05, 1.43, 11.22, 3.33)),
   ];
 
+  /// Draws the attention pulse around the outlines (first-visit hint).
+  final bool pulse;
+
+  @override
+  State<_ExteriorCanvas> createState() => _ExteriorCanvasState();
+}
+
+class _ExteriorCanvasState extends State<_ExteriorCanvas> with SingleTickerProviderStateMixin {
+  static const _assets = _ExteriorCanvas._assets;
+  static const _outlines = _ExteriorCanvas._outlines;
+
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1800),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.pulse) _pulse.repeat();
+  }
+
+  @override
+  void didUpdateWidget(_ExteriorCanvas old) {
+    super.didUpdateWidget(old);
+    if (widget.pulse && !_pulse.isAnimating) {
+      _pulse.repeat();
+    } else if (!widget.pulse && _pulse.isAnimating) {
+      _pulse.stop();
+      _pulse.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -563,11 +622,11 @@ class _ExteriorCanvas extends StatelessWidget {
         // Tapping empty space clears the selection.
         GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => onSelect(null),
-          child: FadeInAsset(frame),
+          onTap: () => widget.onSelect(null),
+          child: FadeInAsset(widget.frame),
         ),
-        if (showOutlines)
-          for (var i = 0; i < _outlines.length && i < floorCount; i++)
+        if (widget.showOutlines)
+          for (var i = 0; i < _outlines.length && i < widget.floorCount; i++)
             _positioned(i, _outlines[i].box, _outlines[i].inset, '$_assets/floor_outline_${i + 1}.svg'),
       ],
     );
@@ -575,28 +634,99 @@ class _ExteriorCanvas extends StatelessWidget {
 
   Widget _positioned(int index, Rect box, (double, double, double, double) inset, String asset) {
     final (top, right, bottom, left) = inset;
-    final dimmed = selected != null && selected != index;
-    final svg = SvgPicture.asset(asset, fit: BoxFit.fill);
     return Positioned(
       left: box.left - box.width * left / 100,
       top: box.top - box.height * top / 100,
       width: box.width * (1 + (left + right) / 100),
       height: box.height * (1 + (top + bottom) / 100),
-      child: Tooltip(
-        message: floorLabel(index),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onSelect(index);
-            },
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: dimmed ? 0.4 : 1,
-              // The selected floor is filled, not just outlined.
-              child: selected == index ? ColorFiltered(colorFilter: _selectedFill, child: svg) : svg,
+      child: _FloorOutline(
+        asset: asset,
+        label: widget.floorLabel(index),
+        selected: widget.selected == index,
+        dimmed: widget.selected != null && widget.selected != index,
+        pulse: _pulse,
+        onTap: () {
+          UiFeedback.select();
+          widget.onSelect(index);
+        },
+      ),
+    );
+  }
+}
+
+/// One tappable floor outline. Same feedback as the masterplan building
+/// buttons: a pulse ring while the hint is showing, a solid fill and slight
+/// grow on hover / press, and dimmed when another floor is selected.
+class _FloorOutline extends StatefulWidget {
+  const _FloorOutline({
+    required this.asset,
+    required this.label,
+    required this.selected,
+    required this.dimmed,
+    required this.pulse,
+    required this.onTap,
+  });
+
+  final String asset;
+  final String label;
+  final bool selected;
+  final bool dimmed;
+  final Animation<double> pulse;
+  final VoidCallback onTap;
+
+  @override
+  State<_FloorOutline> createState() => _FloorOutlineState();
+}
+
+class _FloorOutlineState extends State<_FloorOutline> {
+  bool _hovered = false;
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final svg = SvgPicture.asset(widget.asset, fit: BoxFit.fill);
+    final active = _hovered || _pressed;
+    return Tooltip(
+      message: widget.label,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapCancel: () => setState(() => _pressed = false),
+          onTap: () {
+            setState(() => _pressed = false);
+            widget.onTap();
+          },
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: widget.dimmed ? 0.4 : 1,
+            child: Stack(
+              clipBehavior: Clip.none,
+              fit: StackFit.expand,
+              children: [
+                if (!widget.selected)
+                  IgnorePointer(
+                    child: AnimatedBuilder(
+                      animation: widget.pulse,
+                      builder: (context, _) {
+                        final t = widget.pulse.value;
+                        return Opacity(
+                          opacity: widget.pulse.isAnimating ? 1 - t : 0,
+                          child: Transform.scale(scale: 1 + 0.18 * t, child: svg),
+                        );
+                      },
+                    ),
+                  ),
+                AnimatedScale(
+                  duration: const Duration(milliseconds: 120),
+                  scale: active && !widget.selected ? 1.03 : 1,
+                  // The selected floor is filled, not just outlined.
+                  child: widget.selected ? ColorFiltered(colorFilter: _ExteriorCanvas._selectedFill, child: svg) : svg,
+                ),
+              ],
             ),
           ),
         ),
@@ -804,7 +934,7 @@ class _PanelButton extends StatelessWidget {
       child: InkWell(
         borderRadius: radius,
         onTap: () {
-          HapticFeedback.selectionClick();
+          UiFeedback.select();
           onTap();
         },
         child: Padding(
@@ -1066,7 +1196,10 @@ class _ScrollArrow extends StatelessWidget {
           shape: const CircleBorder(side: BorderSide(color: AppColors.glassBorder, width: 0.48)),
           child: InkWell(
             customBorder: const CircleBorder(),
-            onTap: onTap,
+            onTap: () {
+              UiFeedback.tap();
+              onTap();
+            },
             child: SizedBox.square(
               dimension: 40,
               child: Transform.flip(flipX: flip, child: Icon(icon, color: Colors.white)),
@@ -1100,7 +1233,7 @@ class _ApartmentCard extends StatelessWidget {
     final radius = BorderRadius.circular(16);
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        UiFeedback.select();
         onTap();
       },
       child: Container(
