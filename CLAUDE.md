@@ -40,7 +40,12 @@ keep important content inside x = 100..1820 of the canvas.
   the aerial photo (22 slots, positions in `_laneCentres` on the 2000x1147
   photo grid, inside `RotatingView` so they move with the image). Types/counts
   come from `assets/data/building_details.json` via `BuildingType.loadAll()`
-  (`lib/data/building_data.dart`); ids are generated (A01..A05, B01..B15,
+  (`lib/data/building_data.dart`), which also attaches each type's floors
+  (`assets/data/floor_details.json`, `FloorDetails`, GF..6F bottom to top) and apartment
+  types (`assets/data/apartment_details.json`, `ApartmentDetails`: one area + availability per
+  unit type). The three JSON files mirror the project sheet's Building / Floor / Apartment
+  tabs; values are copied as they are (C's GF has 0 apartments, A's floor areas don't sum to
+  the building total). Ids are generated (A01..A05, B01..B15,
   C01, C02). The slot -> type mapping (`_typeCSlots`, then A, then B) is a
   placeholder. Tap opens `BuildingDetailScreen`.
 - `BuildingDetailScreen` (Figma 81:2 panel open, 225:184 panel closed): exterior
@@ -48,16 +53,19 @@ keep important content inside x = 100..1820 of the canvas.
   button bottom-start reopens), rotate buttons cycle `_frames` (one image for now; floor
   outlines only on frame 0; no zoom/slide, image covers the screen) and are hidden
   while a floor is selected, Restart pops to the first page.
-- Floor selection (Figma 35:2647): the floor outline SVGs are tappable (outline i
-  = floor i+1; tap empty space clears). Selected floor swaps the info panel for
-  "Floor Details" and opens the `_ApartmentsPanel` (bottom-centre): a drag-scrollable row
-  of cards (plan + bedrooms label), one per apartment type of the building, loaded from
+- Floor selection (Figma 35:2647): the floor outline SVGs are tappable (outlines run top
+  to bottom, outline 0 = top floor 6F ... outline 5 = 1F; the photo has no GF outline; tap
+  empty space clears). Floors are named from the sheet code (`AppStrings.floorName` /
+  `floorNumber`, "GF" = Ground). Selected floor swaps the info panel for
+  "Floor Details" (that floor's apartments, types and area) and opens the `_ApartmentsPanel`
+  (bottom-centre): a drag-scrollable row of cards (plan + bedrooms label), one per apartment
+  type on that floor (empty floor shows a message), loaded from
   `assets/images/apartments/<type id lower-case>.png` (1br..4br; currently copies
   of the placeholder plan, replace with real plans). Floor Details X only
   collapses the panel (info button reopens); Apartments X clears the selection.
 - Apartment details (Figma 59:454): tapping an apartment card replaces both panels with
-  `_ApartmentDetailsPanel` (bottom-start: floor, type, plan image, Brochure / Register
-  Interest placeholders; no Availability, no per-apartment size data yet). Its X clears
+  `_ApartmentDetailsPanel` (bottom-start: floor, type, area, availability from
+  `apartment_details.json`, plan image, Brochure / Register Interest placeholders). Its X clears
   the apartment and brings the panels back.
 - Register Interest (Figma 41:3055 form, 100:17 thank-you; `lib/screens/register_interest_screen.dart`):
   the apartment details Register Interest button calls `RegisterInterestScreen.open(context)`, a

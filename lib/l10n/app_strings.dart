@@ -89,6 +89,13 @@ class AppStrings {
     'browseMore': 'Browse more units',
     'loadError': 'Could not load building data',
     'retry': 'Retry',
+    'ground': 'Ground',
+    'groundFloor': 'Ground Floor',
+    'floorArea': 'Floor Area',
+    'area': 'Area',
+    'available': 'Available',
+    'unavailable': 'Unavailable',
+    'noApartmentsOnFloor': 'There are no apartments on this floor',
   };
 
   static const _ar = {
@@ -169,6 +176,13 @@ class AppStrings {
     'browseMore': 'تصفح المزيد من الوحدات',
     'loadError': 'تعذّر تحميل بيانات المباني',
     'retry': 'إعادة المحاولة',
+    'ground': 'الأرضي',
+    'groundFloor': 'الطابق الأرضي',
+    'floorArea': 'مساحة الطابق',
+    'area': 'المساحة',
+    'available': 'متاحة',
+    'unavailable': 'غير متاحة',
+    'noApartmentsOnFloor': 'لا توجد شقق في هذا الطابق',
   };
 
   static AppStrings of(BuildContext context) =>
@@ -248,6 +262,17 @@ class AppStrings {
   String get browseMore => _values['browseMore']!;
   String get loadError => _values['loadError']!;
   String get retry => _values['retry']!;
+  String get floorArea => _values['floorArea']!;
+  String get area => _values['area']!;
+  String get available => _values['available']!;
+  String get unavailable => _values['unavailable']!;
+  String get noApartmentsOnFloor => _values['noApartmentsOnFloor']!;
+
+  /// Short floor value for a sheet floor code: "Ground" for "GF", "3" for "3F".
+  String floorNumber(String code) => code == 'GF' ? _values['ground']! : code.replaceAll(RegExp(r'\D'), '');
+
+  /// Floor name for a sheet floor code: "Ground Floor" or "Floor 3".
+  String floorName(String code) => code == 'GF' ? _values['groundFloor']! : '$floor ${floorNumber(code)}';
   String matchCount(int n, int total) =>
       _values['matchCount']!.replaceAll('{n}', '$n').replaceAll('{total}', '$total');
   String stillThereBody(int seconds) => _values['stillThereBody']!.replaceAll('{s}', '$seconds');

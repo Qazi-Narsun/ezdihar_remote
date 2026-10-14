@@ -1,0 +1,42 @@
+{
+  "title": "Floor Details",
+  "note": "Floors are listed bottom to top (GF = ground floor). Details are the same for all buildings within a type. Values are copied from the project sheet as they are: type C's ground floor has no apartments, and type A's floor areas do not add up to the building total area.",
+  "buildingTypes": [
+    {
+      "type": "A",
+      "floors": [
+        { "floor": "GF", "apartments": 5, "apartmentTypes": ["1BR", "3BR", "4BR"], "area": { "value": 985.82, "unit": "m2" } },
+        { "floor": "1F", "apartments": 7, "apartmentTypes": ["1BR", "3BR", "4BR"], "area": { "value": 1040.26, "unit": "m2" } },
+        { "floor": "2F", "apartments": 7, "apartmentTypes": ["1BR", "3BR", "4BR"], "area": { "value": 1040.26, "unit": "m2" } },
+        { "floor": "3F", "apartments": 7, "apartmentTypes": ["1BR", "3BR", "4BR"], "area": { "value": 1040.26, "unit": "m2" } },
+        { "floor": "4F", "apartments": 7, "apartmentTypes": ["1BR", "3BR", "4BR"], "area": { "value": 1040.26, "unit": "m2" } },
+        { "floor": "5F", "apartments": 7, "apartmentTypes": ["1BR", "3BR", "4BR"], "area": { "value": 1040.26, "unit": "m2" } },
+        { "floor": "6F", "apartments": 7, "apartmentTypes": ["1BR", "2BR", "3BR"], "area": { "value": 934.84, "unit": "m2" } }
+      ]
+    },
+    {
+      "type": "B",
+      "floors": [
+        { "floor": "GF", "apartments": 5, "apartmentTypes": ["2BR", "3BR", "4BR"], "area": { "value": 886.88, "unit": "m2" } },
+        { "floor": "1F", "apartments": 6, "apartmentTypes": ["2BR", "3BR"], "area": { "value": 940.56, "unit": "m2" } },
+        { "floor": "2F", "apartments": 6, "apartmentTypes": ["2BR", "3BR"], "area": { "value": 940.56, "unit": "m2" } },
+        { "floor": "3F", "apartments": 6, "apartmentTypes": ["2BR", "3BR"], "area": { "value": 940.56, "unit": "m2" } },
+        { "floor": "4F", "apartments": 6, "apartmentTypes": ["2BR", "3BR"], "area": { "value": 940.56, "unit": "m2" } },
+        { "floor": "5F", "apartments": 6, "apartmentTypes": ["2BR", "3BR"], "area": { "value": 940.56, "unit": "m2" } },
+        { "floor": "6F", "apartments": 6, "apartmentTypes": ["2BR"], "area": { "value": 835.1, "unit": "m2" } }
+      ]
+    },
+    {
+      "type": "C",
+      "floors": [
+        { "floor": "GF", "apartments": 0, "apartmentTypes": [], "area": { "value": 2167.94, "unit": "m2" } },
+        { "floor": "1F", "apartments": 16, "apartmentTypes": ["1BR", "2BR", "3BR"], "area": { "value": 1914, "unit": "m2" } },
+        { "floor": "2F", "apartments": 16, "apartmentTypes": ["1BR", "2BR"], "area": { "value": 1862.7, "unit": "m2" } },
+        { "floor": "3F", "apartments": 16, "apartmentTypes": ["1BR", "2BR"], "area": { "value": 1862.7, "unit": "m2" } },
+        { "floor": "4F", "apartments": 16, "apartmentTypes": ["1BR", "2BR"], "area": { "value": 1777.2, "unit": "m2" } },
+        { "floor": "5F", "apartments": 14, "apartmentTypes": ["1BR", "2BR"], "area": { "value": 1579.56, "unit": "m2" } },
+        { "floor": "6F", "apartments": 12, "apartmentTypes": ["1BR", "2BR"], "area": { "value": 1366.74, "unit": "m2" } }
+      ]
+    }
+  ]
+}
