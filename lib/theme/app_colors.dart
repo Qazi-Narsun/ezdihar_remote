@@ -18,7 +18,10 @@ abstract final class AppColors {
   static const panelSubtitle = Color(0xFFCCCCCC);
   /// Apartment plan card background (beige).
   static const apartmentCard = Color(0xFFDDD1C3);
-  static const unitChip = Color(0xFF453C37);
+  /// Availability badge fills (Figma 59:520 available, 221:59 not available).
+  static const availableBadge = Color(0xFF5DB510);
+  static const unavailableBadge = Color(0xFFB7100D);
+  static const unitChip =Color(0xFF453C37);
 
   /// Secondary text on glass (white @ 72%): readable over bright backgrounds.
   static const textSecondary = Color(0xB8FFFFFF);

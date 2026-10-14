@@ -67,8 +67,13 @@ keep important content inside x = 100..1820 of the canvas.
   collapses the panel (info button reopens); Apartments X clears the selection.
 - Apartment details (Figma 59:454): tapping an apartment card replaces both panels with
   `_ApartmentDetailsPanel` (bottom-start: floor, type, area, availability from
-  `apartment_details.json`, plan image, Brochure / Register Interest placeholders). Its X clears
+  `apartment_details.json`, plan image, Brochure / Register Interest placeholders; availability is a
+  badge: green "Available" 59:520 / red "Not Available" 221:35, `_AvailabilityRow`). Its X clears
   the apartment and brings the panels back.
+- Brochure: the apartment details Brochure button calls `BrochureScreen.open(context)`
+  (`lib/screens/brochure_screen.dart`), a transparent full-screen modal showing
+  `assets/pdfs/brochure.pdf` via `pdfx` (`PdfView`, portrait page centred in a padded, bordered frame sized to the page aspect, swipe + start/end arrow
+  buttons, pinch zoom, page counter, X closes).
 - Register Interest (Figma 41:3055 form, 100:17 thank-you; `lib/screens/register_interest_screen.dart`):
   the apartment details Register Interest button calls `RegisterInterestScreen.open(context)`, a
   transparent modal route with the "Your Information" form (name/email/phone validated, nothing

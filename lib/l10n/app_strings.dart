@@ -53,6 +53,9 @@ class AppStrings {
     'apartmentDetails': 'Apartment Details',
     'type': 'Type',
     'brochure': 'Brochure',
+    'brochureError': 'Could not open the brochure',
+    'previous': 'Previous page',
+    'next': 'Next page',
     'registerInterest': 'Register Interest',
     'yourInformation': 'Your Information',
     'yourName': 'Your Name',
@@ -94,7 +97,7 @@ class AppStrings {
     'floorArea': 'Floor Area',
     'area': 'Area',
     'available': 'Available',
-    'unavailable': 'Unavailable',
+    'unavailable': 'Not Available',
     'noApartmentsOnFloor': 'There are no apartments on this floor',
   };
 
@@ -140,6 +143,9 @@ class AppStrings {
     'apartmentDetails': 'تفاصيل الشقة',
     'type': 'النوع',
     'brochure': 'الكتيب',
+    'brochureError': 'تعذر فتح الكتيب',
+    'previous': 'الصفحة السابقة',
+    'next': 'الصفحة التالية',
     'registerInterest': 'سجل اهتمامك',
     'yourInformation': 'معلوماتك',
     'yourName': 'الاسم',
@@ -230,6 +236,9 @@ class AppStrings {
   String get apartmentDetails => _values['apartmentDetails']!;
   String get type => _values['type']!;
   String get brochure => _values['brochure']!;
+  String get brochureError => _values['brochureError']!;
+  String get previous => _values['previous']!;
+  String get next => _values['next']!;
   String get registerInterest => _values['registerInterest']!;
   String get yourInformation => _values['yourInformation']!;
   String get yourName => _values['yourName']!;

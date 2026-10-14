@@ -16,6 +16,7 @@ import '../widgets/language_toggle.dart';
 import '../widgets/panel_close_button.dart';
 import '../widgets/restart_dialog.dart';
 import '../widgets/status_chip.dart';
+import 'brochure_screen.dart';
 import 'register_interest_screen.dart';
 
 /// Exterior view of a single building with an info panel.
@@ -693,10 +694,7 @@ class _ApartmentDetailsPanel extends StatelessWidget {
     final rows = [
       (strings.floor, floor),
       (strings.type, type),
-      if (d != null) ...[
-        (strings.area, '${d.area} ${strings.areaUnit}'),
-        (strings.availability, d.available ? strings.available : strings.unavailable),
-      ],
+      if (d != null) (strings.area, '${d.area} ${strings.areaUnit}'),
     ];
     return ClipRRect(
       borderRadius: radius,
@@ -725,6 +723,10 @@ class _ApartmentDetailsPanel extends StatelessWidget {
                 if (i > 0) const SizedBox(height: 16),
                 _InfoRow(strings: strings, label: rows[i].$1, value: rows[i].$2),
               ],
+              if (d != null) ...[
+                const SizedBox(height: 16),
+                _AvailabilityRow(strings: strings, available: d.available),
+              ],
               const SizedBox(height: 32),
               Container(
                 height: 190,
@@ -745,7 +747,7 @@ class _ApartmentDetailsPanel extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: _PanelButton(label: strings.brochure, onTap: () {}),
+                    child: _PanelButton(label: strings.brochure, onTap: () => BrochureScreen.open(context)),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1107,6 +1109,40 @@ class _ApartmentCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// "Availability" row with a green (Available) or red (Not Available) badge.
+class _AvailabilityRow extends StatelessWidget {
+  const _AvailabilityRow({required this.strings, required this.available});
+
+  final AppStrings strings;
+  final bool available;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            strings.availability,
+            style: _text(strings, 16, FontWeight.w400, color: AppColors.textSecondary, spacing: -0.16),
+          ),
+        ),
+        const SizedBox(width: 18),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: available ? AppColors.availableBadge : AppColors.unavailableBadge,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            available ? strings.available : strings.unavailable,
+            style: _text(strings, 16, FontWeight.w400, spacing: -0.16),
+          ),
+        ),
+      ],
     );
   }
 }
