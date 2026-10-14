@@ -534,8 +534,9 @@ class _ExteriorCanvas extends StatelessWidget {
 
   static const _assets = _BuildingDetailScreenState._assets;
 
-  /// Raises the outline SVG's near-transparent fill (1%) to ~40% opacity,
-  /// keeping its colour; the stroke stays opaque.
+  /// Raises the outline SVG's near-transparent fill (3%, the same in every
+  /// outline) to a solid fill in its colour; the stroke stays opaque. Keep the
+  /// outlines' fill-opacity equal, or floors highlight differently.
   static const _selectedFill = ColorFilter.matrix([
     1, 0, 0, 0, 0, //
     0, 1, 0, 0, 0, //

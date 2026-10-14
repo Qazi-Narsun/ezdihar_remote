@@ -1,15 +1,14 @@
 name: Android build
 
+# Only a push to main (a merged PR) builds; every such build becomes a release.
+# Pull requests and other branches are verified locally (flutter analyze + tests).
 on:
   push:
     branches: [main]
-  pull_request:
-  workflow_dispatch:
 
 concurrency:
   group: android-${{ github.ref }}
-  # Only cancel superseded PR builds; every main build becomes a release.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -77,7 +76,6 @@ jobs:
           retention-days: 30
 
       - name: Publish GitHub release
-        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
