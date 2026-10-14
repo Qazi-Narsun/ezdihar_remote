@@ -398,7 +398,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                       title: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(strings.surface, style: _label(strings)),
+                          Text(strings.size, style: _label(strings)),
                           const SizedBox(width: 4),
                           Container(
                             padding: const EdgeInsets.all(4),
