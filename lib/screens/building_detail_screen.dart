@@ -57,7 +57,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
   bool _panelOpen = true;
   int _frame = 0;
 
-  /// Index of the selected floor outline, or null when none is selected.
+  /// Index into [_floors] of the selected floor, or null when none is selected.
   int? _floor;
   int? _apartment;
 
@@ -84,22 +84,14 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
 
   bool get _hasLayer => _floor != null || _apartment != null;
 
-  /// Sheet floor for an outline. Outlines run top to bottom, so outline 0 is
-  /// the top floor; the photo has one outline fewer than the building has
-  /// floors, so the ground floor has none.
-  FloorDetails? _floorAt(int outline) {
-    final floors = widget.type.floorDetails;
-    final i = floors.length - 1 - outline;
-    return i >= 0 && i < floors.length ? floors[i] : null;
-  }
-
-  /// Sheet floor code ("GF", "1F".."6F") for an outline, counted from the
-  /// bottom outline as 1F when there is no floor data.
-  String _floorCode(int outline) =>
-      _floorAt(outline)?.code ?? '${_ExteriorCanvas.outlineCount - outline}F';
+  /// The building's floors from the data, top floor first, so [_floor]
+  /// indexes this list and outline i (drawn top to bottom) is floor i. The
+  /// data is the source of truth: floors without an outline on the photo
+  /// (the ground floor) are reached with the floor stepper.
+  late final List<FloorDetails> _floors = widget.type.floorDetails.reversed.toList();
 
   /// Apartment types on the selected floor.
-  List<String> get _floorTypes => _floorAt(_floor!)?.apartmentTypes ?? widget.type.apartmentTypes;
+  List<String> get _floorTypes => _floors[_floor!].apartmentTypes;
 
   void _selectFloor(int? floor) {
     if (floor != null) _dismissHint();
@@ -109,10 +101,10 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
     });
   }
 
-  /// Steps the selected floor outline by [delta] (-1 is the one drawn above).
+  /// Steps the selected floor by [delta] (-1 is the floor above).
   void _stepFloor(int delta) {
     final next = _floor! + delta;
-    if (next >= 0 && next < _ExteriorCanvas.outlineCount) _selectFloor(next);
+    if (next >= 0 && next < _floors.length) _selectFloor(next);
   }
 
   void _closeTopLayer() {
@@ -171,9 +163,10 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                     child: _ExteriorCanvas(
                       frame: _frames[_frame],
                       showOutlines: _frame == 0,
+                      floorCount: _floors.length,
                       selected: _floor,
                       onSelect: _selectFloor,
-                      floorLabel: (i) => strings.floorName(_floorCode(i)),
+                      floorLabel: (i) => strings.floorName(_floors[i].code),
                     ),
                   ),
                 ),
@@ -203,7 +196,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                                   child: _Breadcrumb(
                                     strings: strings,
                                     buildingId: widget.buildingId,
-                                    floor: _floor == null ? null : strings.floorName(_floorCode(_floor!)),
+                                    floor: _floor == null ? null : strings.floorName(_floors[_floor!].code),
                                     onMasterplan: () => Navigator.of(context).pop(),
                                     onBuilding: () => _selectFloor(null),
                                   ),
@@ -264,9 +257,9 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                           alignment: Alignment.centerRight,
                           child: _FloorStepper(
                             strings: strings,
-                            floor: strings.floorName(_floorCode(_floor!)),
+                            floor: strings.floorName(_floors[_floor!].code),
                             onUp: _floor! > 0 ? () => _stepFloor(-1) : null,
-                            onDown: _floor! < _ExteriorCanvas.outlineCount - 1 ? () => _stepFloor(1) : null,
+                            onDown: _floor! < _floors.length - 1 ? () => _stepFloor(1) : null,
                           ),
                         ),
                       Align(
@@ -349,7 +342,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
         alignment: AlignmentDirectional.bottomStart,
         child: _ApartmentDetailsPanel(
           strings: strings,
-          floor: strings.floorNumber(_floorCode(_floor!)),
+          floor: strings.floorNumber(_floors[_floor!].code),
           type: _floorTypes[_apartment!],
           details: widget.type.apartments[_floorTypes[_apartment!]],
           onClose: () => setState(() => _apartment = null),
@@ -366,8 +359,8 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
           strings: strings,
           type: widget.type,
           buildingId: widget.buildingId,
-          floor: _floor == null ? null : _floorCode(_floor!),
-          floorDetails: _floor == null ? null : _floorAt(_floor!),
+          floor: _floor == null ? null : _floors[_floor!].code,
+          floorDetails: _floor == null ? null : _floors[_floor!],
           // Only collapses the panel; the floor stays selected.
           onCollapse: () => setState(() => _panelOpen = false),
         ),
@@ -511,6 +504,7 @@ class _ExteriorCanvas extends StatelessWidget {
   const _ExteriorCanvas({
     required this.frame,
     required this.showOutlines,
+    required this.floorCount,
     required this.selected,
     required this.onSelect,
     required this.floorLabel,
@@ -518,6 +512,10 @@ class _ExteriorCanvas extends StatelessWidget {
 
   final String frame;
   final bool showOutlines;
+
+  /// Floors in the data; outline i (top to bottom) is floor i, and outlines
+  /// beyond the data's floors are not drawn.
+  final int floorCount;
   final int? selected;
   final ValueChanged<int?> onSelect;
 
@@ -537,8 +535,6 @@ class _ExteriorCanvas extends StatelessWidget {
     (box: Rect.fromLTWH(608, 616, 210, 63), inset: (5.05, 1.43, 11.22, 3.33)),
   ];
 
-  static int get outlineCount => _outlines.length;
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -551,7 +547,7 @@ class _ExteriorCanvas extends StatelessWidget {
           child: FadeInAsset(frame),
         ),
         if (showOutlines)
-          for (var i = 0; i < _outlines.length; i++)
+          for (var i = 0; i < _outlines.length && i < floorCount; i++)
             _positioned(i, _outlines[i].box, _outlines[i].inset, '$_assets/floor_outline_${i + 1}.svg'),
       ],
     );

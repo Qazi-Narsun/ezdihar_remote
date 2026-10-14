@@ -53,9 +53,11 @@ keep important content inside x = 100..1820 of the canvas.
   button bottom-start reopens), rotate buttons cycle `_frames` (one image for now; floor
   outlines only on frame 0; no zoom/slide, image covers the screen) and are hidden
   while a floor is selected, Restart pops to the first page.
-- Floor selection (Figma 35:2647): the floor outline SVGs are tappable (outlines run top
-  to bottom, outline 0 = top floor 6F ... outline 5 = 1F; the photo has no GF outline; tap
-  empty space clears). Floors are named from the sheet code (`AppStrings.floorName` /
+- Floor selection (Figma 35:2647): the floor data is the source of truth (the photo is
+  obsolete). The selection indexes the type's floors top first (6F..GF); the floor stepper
+  and arrow keys cover every floor in the data. Outline SVG i (top to bottom) is tappable as
+  floor i; floors without an outline (GF on the current photo) are reached with the stepper;
+  tap empty space clears. Floors are named from the sheet code (`AppStrings.floorName` /
   `floorNumber`, "GF" = Ground). Selected floor swaps the info panel for
   "Floor Details" (that floor's apartments, types and area) and opens the `_ApartmentsPanel`
   (bottom-centre): a drag-scrollable row of cards (plan + bedrooms label), one per apartment
