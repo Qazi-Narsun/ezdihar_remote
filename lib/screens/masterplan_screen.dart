@@ -239,6 +239,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GlassIconButton(
+                        size: 48,
                         tooltip: strings.back,
                         onPressed: () => Navigator.of(context).maybePop(),
                         child: Transform.flip(

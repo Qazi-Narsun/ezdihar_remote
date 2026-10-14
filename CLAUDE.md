@@ -10,8 +10,9 @@ landscape + `SystemUiMode.immersiveSticky`; the manifest uses `sensorLandscape`.
 keep important content inside x = 100..1820 of the canvas.
 
 **One canvas for every screen:** `AppCanvas` (`lib/widgets/app_canvas.dart`, mounted in
-`MaterialApp.builder` around everything) lays the whole app out on a fixed 1280x800 logical canvas
-(what the 1920x1200 tablet reports at 1.5x) and scales it uniformly to the screen, so every 16:10
+`MaterialApp.builder` around everything) lays the whole app out on a fixed 1920x1200 logical canvas
+(1920 wide like the Figma frames, so sizes in code are Figma pixels) and scales it uniformly to the
+screen, so every 16:10
 resolution/density shows the identical layout; other aspects are letterboxed (`AppColors.letterbox`),
 never reflowed. System text scaling is ignored. All logical sizes in code are canvas pixels: never
 size things from the real screen or `devicePixelRatio`. `test/app_canvas_test.dart` checks every

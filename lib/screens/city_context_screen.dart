@@ -73,6 +73,7 @@ class _CityContextScreenState extends State<CityContextScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GlassIconButton(
+                    size: 48,
                     tooltip: strings.back,
                     onPressed: () => Navigator.of(context).maybePop(),
                     child: Transform.flip(

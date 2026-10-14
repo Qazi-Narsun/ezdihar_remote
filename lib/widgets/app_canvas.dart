@@ -9,8 +9,8 @@ import '../theme/app_colors.dart';
 /// layout whatever its resolution or pixel density. Other aspect ratios are
 /// letterboxed (never reflowed).
 ///
-/// The canvas is what the 1920x1200 target tablet reports at its 1.5x density,
-/// so the layout QA'd on that tablet is the one every screen gets.
+/// The canvas is 1920 wide like the Figma frames, so sizes in code are Figma
+/// pixels and take the same share of the screen as in Figma.
 ///
 /// Mounted once from `MaterialApp.builder`, around the navigator, so routes,
 /// dialogs and overlays all live on the canvas.
@@ -20,7 +20,7 @@ class AppCanvas extends StatelessWidget {
   final Widget child;
 
   /// Logical size every screen is laid out on.
-  static const size = Size(1280, 800);
+  static const size = Size(1920, 1200);
 
   @override
   Widget build(BuildContext context) {
