@@ -66,7 +66,8 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
 - Floor selection (Figma 35:2647): the floor data is the source of truth (the photo is
   obsolete). The selection indexes the type's floors top first (6F..GF); the floor stepper
   and arrow keys cover every floor in the data. Outline SVG i (top to bottom) is tappable as
-  floor i; floors without an outline (GF on the current photo) are reached with the stepper;
+  floor i (outlines 1..6 = 6F..1F, `floor_outline_7.svg` = GF, a placeholder box over the storey
+  below 1F until a traced outline exists); floors without an outline are reached with the stepper;
   tap empty space clears. Floors are labelled everywhere (title, breadcrumb, stepper, tooltips,
   panels, masterplan floor filter) with the sheet's names via `AppStrings.floorName` /
   `floorNameOfLevel`: English "GF", "1F".."6F", Arabic "الأرضي", "ط1".."ط6". Selected floor swaps

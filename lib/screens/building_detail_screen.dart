@@ -88,8 +88,8 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
 
   /// The building's floors from the data, top floor first, so [_floor]
   /// indexes this list and outline i (drawn top to bottom) is floor i. The
-  /// data is the source of truth: floors without an outline on the photo
-  /// (the ground floor) are reached with the floor stepper.
+  /// data is the source of truth: a floor without an outline on the photo
+  /// is reached with the floor stepper.
   late final List<FloorDetails> _floors = widget.type.floorDetails.reversed.toList();
 
   /// Apartment types on the selected floor.
@@ -576,6 +576,8 @@ class _ExteriorCanvas extends StatefulWidget {
     (box: Rect.fromLTWH(605.5, 484, 211.5, 64.5), inset: (4.69, 1.42, 11.11, 3.31)),
     (box: Rect.fromLTWH(608, 550.5, 210, 63), inset: (4.79, 1.43, 11.29, 3.33)),
     (box: Rect.fromLTWH(608, 616, 210, 63), inset: (5.05, 1.43, 11.22, 3.33)),
+    // GF: a placeholder box over the storey below 1F, until a traced outline exists.
+    (box: Rect.fromLTWH(608, 684, 210, 56), inset: (0.0, 0.0, 0.0, 0.0)),
   ];
 
   /// Draws the attention pulse around the outlines (first-visit hint).

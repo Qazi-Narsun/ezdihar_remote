@@ -45,8 +45,8 @@ void main() {
     expect(find.text('1F Details'), findsOneWidget);
     expect(find.text('Apartments'), findsOneWidget);
 
-    // Type C's GF has no apartments in the sheet.
-    await tester.tap(find.byTooltip('Floor below'));
+    // Type C's GF has no apartments in the sheet; it has its own outline.
+    await tester.tap(find.byTooltip('GF'));
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pump(const Duration(milliseconds: 500)); // panel fade-out
     await tester.pump();
