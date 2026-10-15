@@ -55,6 +55,17 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('the building panel fades out in place when a floor is selected', (tester) async {
+    await pumpBuilding(tester, 'en');
+    final building = find.text('Building Type C');
+    final start = tester.getRect(building);
+
+    await tester.tap(find.byTooltip('GF'));
+    await tester.pump(const Duration(milliseconds: 60));
+    // Mid cross-fade the outgoing panel is still where it was, not at bottom-centre.
+    expect(tester.getRect(building).left, start.left);
+  });
+
   testWidgets('Arabic floor names', (tester) async {
     await pumpBuilding(tester, 'ar');
     await tester.tap(find.byTooltip('ط1'));
