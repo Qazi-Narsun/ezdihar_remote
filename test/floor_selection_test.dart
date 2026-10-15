@@ -42,7 +42,8 @@ void main() {
     // The lowest outline on the photo is 1F, which has apartments.
     await tester.tap(find.byTooltip('1F'));
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('1F Details'), findsOneWidget);
+    expect(find.text('Floor Details'), findsOneWidget);
+    expect(find.text('1F'), findsWidgets);
     expect(find.text('Apartments'), findsOneWidget);
 
     // Type C's GF has no apartments in the sheet; it has its own outline.
@@ -50,14 +51,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pump(const Duration(milliseconds: 500)); // panel fade-out
     await tester.pump();
-    expect(find.text('GF Details'), findsOneWidget);
+    expect(find.text('Floor Details'), findsOneWidget);
+    expect(find.text('GF'), findsWidgets);
     expect(find.text('Apartments'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('the building panel fades out in place when a floor is selected', (tester) async {
     await pumpBuilding(tester, 'en');
-    final building = find.text('Building Type C');
+    final building = find.text('Building Details');
     final start = tester.getRect(building);
 
     await tester.tap(find.byTooltip('GF'));
@@ -70,6 +72,7 @@ void main() {
     await pumpBuilding(tester, 'ar');
     await tester.tap(find.byTooltip('ط1'));
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('تفاصيل ط1'), findsOneWidget);
+    expect(find.text('تفاصيل الطابق'), findsOneWidget);
+    expect(find.text('ط1'), findsWidgets);
   });
 }

@@ -37,7 +37,7 @@ class AppStrings {
     'rotateLeft': 'Rotate left',
     'rotateRight': 'Rotate right',
     'resetView': 'Reset view',
-    'buildingTypeTitle': 'Building Type {type}',
+    'buildingDetails': 'Building Details',
     'buildingNo': 'Building no.',
     'floors': 'Floors',
     'numberOfApartments': 'Number of Apartments',
@@ -92,7 +92,7 @@ class AppStrings {
     'retry': 'Retry',
     'groundFloorCode': 'GF',
     'floorCode': '{n}F',
-    'floorDetailsTitle': '{floor} Details',
+    'floorDetails': 'Floor Details',
     'floorArea': 'Floor Area',
     'area': 'Area',
     'size': 'Size',
@@ -126,7 +126,7 @@ class AppStrings {
     'rotateLeft': 'تدوير لليسار',
     'rotateRight': 'تدوير لليمين',
     'resetView': 'إعادة ضبط العرض',
-    'buildingTypeTitle': 'نوع المبنى {type}',
+    'buildingDetails': 'تفاصيل المبنى',
     'buildingNo': 'رقم المبنى',
     'floors': 'الطوابق',
     'numberOfApartments': 'عدد الشقق',
@@ -181,7 +181,7 @@ class AppStrings {
     'retry': 'إعادة المحاولة',
     'groundFloorCode': 'الأرضي',
     'floorCode': 'ط{n}',
-    'floorDetailsTitle': 'تفاصيل {floor}',
+    'floorDetails': 'تفاصيل الطابق',
     'floorArea': 'مساحة الطابق',
     'area': 'المساحة',
     'size': 'المساحة',
@@ -220,6 +220,8 @@ class AppStrings {
   String get rotateRight => _values['rotateRight']!;
   String get resetView => _values['resetView']!;
   String get buildingNo => _values['buildingNo']!;
+  String get buildingDetails => _values['buildingDetails']!;
+  String get floorDetails => _values['floorDetails']!;
   String get floors => _values['floors']!;
   String get numberOfApartments => _values['numberOfApartments']!;
   String get apartmentTypes => _values['apartmentTypes']!;
@@ -283,14 +285,10 @@ class AppStrings {
   /// Floor name for a floor level (0 = ground), e.g. on the floor filter.
   String floorNameOfLevel(int level) => floorName(level == 0 ? 'GF' : '${level}F');
 
-  /// Floor Details panel title, e.g. "1F Details".
-  String floorDetailsTitle(String code) =>
-      _values['floorDetailsTitle']!.replaceAll('{floor}', floorName(code));
   String matchCount(int n, int total) =>
       _values['matchCount']!.replaceAll('{n}', '$n').replaceAll('{total}', '$total');
   String stillThereBody(int seconds) => _values['stillThereBody']!.replaceAll('{s}', '$seconds');
   String bedrooms(String n) => _values['bedrooms']!.replaceAll('{n}', n);
-  String buildingTypeTitle(String type) => _values['buildingTypeTitle']!.replaceAll('{type}', type);
 }
 
 class _AppStringsDelegate extends LocalizationsDelegate<AppStrings> {
