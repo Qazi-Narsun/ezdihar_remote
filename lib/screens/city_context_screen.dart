@@ -120,13 +120,33 @@ class _MapCanvas extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Project site polygon.
+          // Project site polygon; tapping inside its outline opens the
+          // masterplan, like the logo card.
           Positioned(
             left: 1241.24,
             top: 256.82,
             width: 186.779,
             height: 251.047,
-            child: Image.asset('$_assets/site_polygon.png', fit: BoxFit.fill),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset('$_assets/site_polygon.png', fit: BoxFit.fill),
+                // Hit area only (the clip draws nothing): the polygon's outline.
+                ClipPath(
+                  clipper: const _SitePolygonClipper(),
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        UiFeedback.select();
+                        onProjectTap();
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           _ProjectCallout(onTap: onProjectTap),
           MapPin(
@@ -197,6 +217,27 @@ class _MapCanvas extends StatelessWidget {
       );
 }
 
+/// Outline of `site_polygon.png` (traced on its 374x503 pixels), so only taps
+/// on the highlighted site count, not on the map around it.
+class _SitePolygonClipper extends CustomClipper<Path> {
+  const _SitePolygonClipper();
+
+  static const _image = Size(374, 503);
+  static const _points = [
+    Offset(97, 45), Offset(262, 3), Offset(281, 22), Offset(362, 225), Offset(195, 497),
+    Offset(176, 497), Offset(6, 318), Offset(122, 163), Offset(92, 73),
+  ];
+
+  @override
+  Path getClip(Size size) => Path()
+    ..addPolygon([
+      for (final p in _points) Offset(p.dx * size.width / _image.width, p.dy * size.height / _image.height),
+    ], true);
+
+  @override
+  bool shouldReclip(_SitePolygonClipper oldClipper) => false;
+}
+
 /// Callout linking the site polygon to the project logo card.
 class _ProjectCallout extends StatelessWidget {
   const _ProjectCallout({required this.onTap});
@@ -212,18 +253,21 @@ class _ProjectCallout extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         // Leader line, mirrored so it runs from the card down-left to the dot.
+        // Line and dot lie over the site polygon: let taps reach it.
         Positioned(
           left: 1366.5,
           top: 232,
-          child: Transform.flip(
-            flipX: true,
-            child: SvgPicture.asset('$_assets/callout_line.svg'),
+          child: IgnorePointer(
+            child: Transform.flip(
+              flipX: true,
+              child: SvgPicture.asset('$_assets/callout_line.svg'),
+            ),
           ),
         ),
         Positioned(
           left: 1359,
           top: 302.5,
-          child: SvgPicture.asset('$_assets/callout_dot.svg'),
+          child: IgnorePointer(child: SvgPicture.asset('$_assets/callout_dot.svg')),
         ),
         Positioned(
           left: 1481,

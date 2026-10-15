@@ -5,7 +5,8 @@ Flutter app implementing the Figma file
 1920x1081 canvas (landscape tablet/desktop), Arabic (RTL) is the default locale.
 
 **Target device:** Android tablet, 1920x1200 (16:10), landscape only, fullscreen. `main()` locks
-landscape + `SystemUiMode.immersiveSticky`; the manifest uses `sensorLandscape`. Figma canvases
+landscape + `SystemUiMode.immersiveSticky`; the manifest uses `sensorLandscape` (iOS Info.plist lists
+landscape only + `UIRequiresFullScreen`). Figma canvases
 (1920x1081) are scaled with `BoxFit.cover`, so ~5% of the canvas width is cropped per side at 16:10:
 keep important content inside x = 100..1820 of the canvas.
 
@@ -38,7 +39,8 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
 - Reusable: `OverlayBackground` (image + tint/gradient), `PillButton`,
   `LanguageToggle`, `GlassIconButton`, `BrandTitle`, `MapPin`.
 - Flow: `InitialScreen` -> (Start Journey, `Navigator.push`) -> `CityContextScreen`
-  -> (tap project logo card) -> `MasterplanScreen`; back button pops.
+  -> (tap project logo card or the highlighted site polygon, hit-tested on its outline via
+  `_SitePolygonClipper`) -> `MasterplanScreen`; back button pops.
 - `MasterplanScreen` (Figma 24:1403 + Filters 49:5630 + Gallery 49:6205): bottom nav
   = Filters|Gallery tabs; rotate-left / rotate-right buttons sit at the screen sides,
   vertically centred (Figma 225:542 / 225:526, as on the building screen). Tabs are mutually exclusive
@@ -71,8 +73,8 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
   tap empty space clears. Floors are labelled everywhere (title, breadcrumb, stepper, tooltips,
   panels, masterplan floor filter) with the sheet's names via `AppStrings.floorName` /
   `floorNameOfLevel`: English "GF", "1F".."6F", Arabic "الأرضي", "ط1".."ط6". Selected floor swaps
-  the info panel for "<floor> Details" (`floorDetailsTitle`: that floor's apartments, types and
-  area) and opens the `_ApartmentsPanel`
+  the "Building Details" info panel for "Floor Details" (`buildingDetails` / `floorDetails`; the
+  floor's name is in its Floor row; that floor's apartments, types and area) and opens the `_ApartmentsPanel`
   (bottom-centre): a drag-scrollable row of cards (plan + bedrooms label), one per apartment
   type on that floor (hidden entirely on a floor with no apartments, e.g. type C's GF), loaded from
   `assets/images/apartments/<type id lower-case>.png` (1br..4br; currently copies
@@ -116,8 +118,8 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
     The Filters panel always reserves the Clear filters slot so it does not resize (QA #03).
   - Building detail: `_Breadcrumb` (Masterplan > Building > Floor), `_FloorStepper` (up/down
     while a floor is selected, arrow keys too; centre-end, opposite the start-side panels),
-    selected floor outline is filled solid orange, the same on every floor (all outline SVGs
-    share fill-opacity 0.03, boosted x40), selecting a floor or closing Apartment
+    selected floor outline is filled semi-transparent orange (60%, as in Figma 35:2647), the same
+    on every floor (all outline SVGs share fill-opacity 0.03, boosted x20), selecting a floor or closing Apartment
     Details reopens a collapsed info panel, floor outlines have tooltips, panels swap with
     `AnimatedSwitcher`. Back/system back/Esc close the topmost layer first (apartment, floor)
     via `PopScope`. Floor Details/Building panel uses a collapse chevron (not X); X still means

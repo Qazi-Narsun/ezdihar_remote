@@ -387,9 +387,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
         maxWidthFactor: 0.45,
         alignment: AlignmentDirectional.bottomStart,
         child: _InfoPanel(
-          title: _floor != null
-              ? strings.floorDetailsTitle(_floors[_floor!].code)
-              : strings.buildingTypeTitle(widget.type.type),
+          title: _floor != null ? strings.floorDetails : strings.buildingDetails,
           strings: strings,
           type: widget.type,
           buildingId: widget.buildingId,
@@ -565,13 +563,14 @@ class _ExteriorCanvas extends StatefulWidget {
   static const _assets = _BuildingDetailScreenState._assets;
 
   /// Raises the outline SVG's near-transparent fill (3%, the same in every
-  /// outline) to a solid fill in its colour; the stroke stays opaque. Keep the
-  /// outlines' fill-opacity equal, or floors highlight differently.
+  /// outline) to a 60% fill in its colour, so the facade shows through as in
+  /// Figma 35:2647; the stroke stays opaque. Keep the outlines' fill-opacity
+  /// equal, or floors highlight differently.
   static const _selectedFill = ColorFilter.matrix([
     1, 0, 0, 0, 0, //
     0, 1, 0, 0, 0, //
     0, 0, 1, 0, 0, //
-    0, 0, 0, 40, 0, //
+    0, 0, 0, 20, 0, //
   ]);
 
   /// Per outline: Figma box (left, top, width, height) and the SVG's overflow
