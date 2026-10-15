@@ -286,7 +286,12 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                             onDown: _floor! < _floors.length - 1 ? () => _stepFloor(1) : null,
                           ),
                         ),
+                      // Keyed: the rotate buttons / stepper above change the
+                      // child count, and an unkeyed panel slot would then take
+                      // over its neighbour's switcher (the outgoing building
+                      // panel faded out at bottom-centre).
                       Align(
+                        key: const ValueKey('startPanel'),
                         alignment: AlignmentDirectional.bottomStart,
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 250),
@@ -299,6 +304,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                         ),
                       ),
                       Align(
+                        key: const ValueKey('apartmentsPanel'),
                         alignment: Alignment.bottomCenter,
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 250),
@@ -319,6 +325,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
                         ),
                       ),
                       Align(
+                        key: const ValueKey('restart'),
                         alignment: AlignmentDirectional.bottomEnd,
                         child: GlassIconButton(
                           size: 48,
