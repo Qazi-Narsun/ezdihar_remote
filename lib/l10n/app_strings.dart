@@ -104,6 +104,14 @@ class AppStrings {
     'screenOffline': 'Screen offline',
     'scanScreenCode': 'Scan the code on the screen',
     'scanScreenCodeHint': 'The QR code shows on the main screen while no remote is connected',
+    'enterManually': 'Or enter the address manually',
+    'ipAddress': 'IP address',
+    'port': 'Port',
+    'connect': 'Connect',
+    'invalidIp': 'Enter a valid IP address or host name',
+    'invalidPort': 'Port must be 1 to 65535',
+    'cameraPermissionDenied': 'Camera permission is denied. Allow it in the settings or enter the address below',
+    'tryAgain': 'Try again',
     'notScreenCode': 'This is not an Ezdihar screen code',
     'cameraError': 'The camera is not available',
   };
@@ -201,6 +209,14 @@ class AppStrings {
     'screenOffline': 'الشاشة غير متصلة',
     'scanScreenCode': 'امسح الرمز الظاهر على الشاشة',
     'scanScreenCodeHint': 'يظهر رمز QR على الشاشة الرئيسية عندما لا يكون هناك جهاز تحكم متصل',
+    'enterManually': 'أو أدخل العنوان يدويًا',
+    'ipAddress': 'عنوان IP',
+    'port': 'المنفذ',
+    'connect': 'اتصال',
+    'invalidIp': 'أدخل عنوان IP أو اسم مضيف صحيحًا',
+    'invalidPort': 'يجب أن يكون المنفذ من 1 إلى 65535',
+    'cameraPermissionDenied': 'إذن الكاميرا مرفوض. اسمح به من الإعدادات أو أدخل العنوان أدناه',
+    'tryAgain': 'حاول مرة أخرى',
     'notScreenCode': 'هذا الرمز ليس رمز شاشة إزدهار',
     'cameraError': 'الكاميرا غير متاحة',
   };
@@ -296,6 +312,14 @@ class AppStrings {
   String get screenOffline => _values['screenOffline']!;
   String get scanScreenCode => _values['scanScreenCode']!;
   String get scanScreenCodeHint => _values['scanScreenCodeHint']!;
+  String get enterManually => _values['enterManually']!;
+  String get ipAddress => _values['ipAddress']!;
+  String get port => _values['port']!;
+  String get connect => _values['connect']!;
+  String get invalidIp => _values['invalidIp']!;
+  String get invalidPort => _values['invalidPort']!;
+  String get cameraPermissionDenied => _values['cameraPermissionDenied']!;
+  String get tryAgain => _values['tryAgain']!;
   String get notScreenCode => _values['notScreenCode']!;
   String get cameraError => _values['cameraError']!;
 

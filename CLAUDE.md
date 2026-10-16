@@ -144,8 +144,9 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
   reconnects on its own (1..30s backoff); `send(event, payload)` writes the player's
   `{"Event": ..., "Payload": ...}` JSON (player events: `StartExperience {id}`, `StartState {id}`,
   `GetCurrentExperience`, `GetCurrentState`). `ScreenLinkButton` (initial screen, next to the language
-  toggle) shows the link state and opens `PairScreen` (`mobile_scanner` camera, accepts only `ws://host:port`
-  codes). Android needs INTERNET/CAMERA and cleartext traffic.
+  toggle) shows the link state and opens `PairScreen` (`mobile_scanner` camera window, accepts only
+  `ws://host:port` codes, camera errors/permission denied shown in the window with Try again; plus a manual
+  IP/host + port bar, port default 3737, validated, prefilled from the saved pairing). Android needs INTERNET/CAMERA and cleartext traffic.
 - Main screen mirroring: screens drive states of the player's `ezdihar` experience (each plays its
   video, then holds on its hero image). `MirrorState(state:, tag:)` (`lib/widgets/mirror_state.dart`,
   its `routeObserver` is on `MaterialApp.navigatorObservers`) sends `StartState {id, experience, tag}`

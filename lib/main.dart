@@ -16,10 +16,7 @@ import 'widgets/mirror_state.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Kiosk tablet (1920x1200, landscape): hide status + navigation bars.
-  await SystemChrome.setPreferredOrientations(const [
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
+  await SystemChrome.setPreferredOrientations(const [DeviceOrientation.landscapeLeft]);
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   UiFeedback.init(); // pre-load interaction sounds; never blocks startup
   await PlayerConnection.load(); // reconnects to the paired main screen, if any
@@ -35,10 +32,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: localeController,
-      builder: (context, _) => _buildApp(),
-    );
+    return ListenableBuilder(listenable: localeController, builder: (context, _) => _buildApp());
   }
 
   Widget _buildApp() {
@@ -56,27 +50,21 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
-        pageTransitionsTheme: const PageTransitionsTheme(builders: {
-          TargetPlatform.android: DirectionalPageTransitionsBuilder(),
-          TargetPlatform.windows: DirectionalPageTransitionsBuilder(),
-          TargetPlatform.iOS: DirectionalPageTransitionsBuilder(),
-          TargetPlatform.linux: DirectionalPageTransitionsBuilder(),
-          TargetPlatform.macOS: DirectionalPageTransitionsBuilder(),
-        }),
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: DirectionalPageTransitionsBuilder(),
+            TargetPlatform.windows: DirectionalPageTransitionsBuilder(),
+            TargetPlatform.iOS: DirectionalPageTransitionsBuilder(),
+            TargetPlatform.linux: DirectionalPageTransitionsBuilder(),
+            TargetPlatform.macOS: DirectionalPageTransitionsBuilder(),
+          },
+        ),
       ),
       // The locale drives text direction: ar -> RTL, en -> LTR.
       locale: locale,
       supportedLocales: AppStrings.supportedLocales,
-      localizationsDelegates: const [
-        AppStrings.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      home: InitialScreen(
-        locale: locale,
-        onLocaleChanged: localeController.setLocale,
-      ),
+      localizationsDelegates: const [AppStrings.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+      home: InitialScreen(locale: locale, onLocaleChanged: localeController.setLocale),
       debugShowCheckedModeBanner: false,
     );
   }
