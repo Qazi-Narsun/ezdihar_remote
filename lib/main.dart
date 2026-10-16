@@ -11,6 +11,7 @@ import 'widgets/app_canvas.dart';
 import 'widgets/directional_page_transitions.dart';
 import 'widgets/idle_reset.dart';
 import 'widgets/locale_fade.dart';
+import 'widgets/mirror_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
     final locale = localeController.locale;
     return MaterialApp(
       navigatorKey: _navigatorKey,
+      navigatorObservers: [MirrorState.routeObserver],
       builder: (context, child) => AppCanvas(
         child: LocaleFade(
           locale: locale,

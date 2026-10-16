@@ -145,7 +145,20 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
   `{"Event": ..., "Payload": ...}` JSON (player events: `StartExperience {id}`, `StartState {id}`,
   `GetCurrentExperience`, `GetCurrentState`). `ScreenLinkButton` (initial screen, next to the language
   toggle) shows the link state and opens `PairScreen` (`mobile_scanner` camera, accepts only `ws://host:port`
-  codes). Nothing drives the player's videos yet. Android needs INTERNET/CAMERA and cleartext traffic.
+  codes). Android needs INTERNET/CAMERA and cleartext traffic.
+- Main screen mirroring: screens drive states of the player's `ezdihar` experience (each plays its
+  video, then holds on its hero image). `MirrorState(state:, tag:)` (`lib/widgets/mirror_state.dart`,
+  its `routeObserver` is on `MaterialApp.navigatorObservers`) sends `StartState {id, experience, tag}`
+  while its route is on top, and again when the route above pops. States: `splash` (initial),
+  `city_context`, `masterplan`, and on the building screen `building_details` (tag = building type),
+  `floor_details` (tag = floor code, also with the panel collapsed), `apartment_details` (tag = unit
+  type), `exterior` (building panel collapsed). The register form and thank-you screen have no
+  MirrorState, so the main screen keeps the previous state. Modals: a gallery tile tap sends
+  `ShowModal {kind: gallery, id: gallery_N}`, closing/leaving the gallery sends `HideModal`; the
+  brochure sends `ShowModal {kind: brochure, page}` on open and every page change, `HideModal` on
+  close. A new state also closes the modal. `PlayerConnection` drops repeats and resends the state
+  + modal on every (re)connect. New screens/panels: wrap them in `MirrorState` and add the state to
+  the player's `Assets/Experiences/ezdihar/config.json`.
 - `RotatingView` (`lib/widgets/rotating_view.dart`) is the shared slide/zoom
   stand-in for 360 frames. `GlassIconButton` takes `padding` for a pill with
   icon + label.

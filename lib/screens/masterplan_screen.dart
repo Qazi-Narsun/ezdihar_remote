@@ -9,12 +9,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../data/building_data.dart';
 import '../l10n/app_strings.dart';
+import '../services/player_connection.dart';
 import '../services/ui_feedback.dart';
 import '../theme/app_colors.dart';
 import '../widgets/fade_in_asset.dart';
 import '../widgets/fit_panel.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/language_toggle.dart';
+import '../widgets/mirror_state.dart';
 import '../widgets/panel_close_button.dart';
 import '../widgets/restart_dialog.dart';
 import '../widgets/rotating_view.dart';
@@ -212,7 +214,13 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
   void _togglePanel(_MasterplanPanel panel) {
     _dismissHint();
     _panel == panel ? UiFeedback.dismiss() : UiFeedback.select();
-    setState(() => _panel = _panel == panel ? null : panel);
+    _setPanel(_panel == panel ? null : panel);
+  }
+
+  /// Opens [panel] (null closes). Leaving the gallery closes its modal on the main screen.
+  void _setPanel(_MasterplanPanel? panel) {
+    if (panel != _MasterplanPanel.gallery) PlayerConnection.instance.hideModal();
+    setState(() => _panel = panel);
   }
 
   /// Rotate buttons and arrow keys: back to 1x, then turn.
@@ -237,11 +245,13 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
     final isArabic = strings.isArabic;
     final spots = _spots();
     final matchCount = spots.where((s) => s.matched).length;
-    return CallbackShortcuts(
+    return MirrorState(
+      state: 'masterplan',
+      child: CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _rotate(-1),
         const SingleActivator(LogicalKeyboardKey.arrowRight): () => _rotate(1),
-        const SingleActivator(LogicalKeyboardKey.escape): () => setState(() => _panel = null),
+        const SingleActivator(LogicalKeyboardKey.escape): () => _setPanel(null),
       },
       child: Focus(
         autofocus: true,
@@ -374,6 +384,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
       ),
         ),
       ),
+    ),
     );
   }
 
@@ -449,7 +460,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                 ),
                 PanelCloseButton(
                   tooltip: strings.close,
-                  onPressed: () => setState(() => _panel = null),
+                  onPressed: () => _setPanel(null),
                 ),
               ],
             ),
@@ -572,7 +583,7 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                 ),
                 PanelCloseButton(
                   tooltip: strings.close,
-                  onPressed: () => setState(() => _panel = null),
+                  onPressed: () => _setPanel(null),
                 ),
               ],
             ),
@@ -600,6 +611,11 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
                     onTap: () {
                       UiFeedback.tap();
                       setState(() => _selectedImage = i);
+                      // Main screen: Gallery/<id>.mp4 or .png of the player experience.
+                      PlayerConnection.instance.showModal({
+                        'kind': 'gallery',
+                        'id': images[i].substring(0, images[i].lastIndexOf('.')),
+                      });
                     },
                   ),
                 ),

@@ -14,6 +14,7 @@ import '../widgets/fade_in_asset.dart';
 import '../widgets/fit_panel.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/language_toggle.dart';
+import '../widgets/mirror_state.dart';
 import '../widgets/panel_close_button.dart';
 import '../widgets/restart_dialog.dart';
 import '../widgets/status_chip.dart';
@@ -136,7 +137,11 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
     final strings = AppStrings.of(context);
     final isArabic = strings.isArabic;
     final floorStepper = _floor != null;
-    return PopScope(
+    final (mirrored, mirroredTag) = _mirroredState;
+    return MirrorState(
+      state: mirrored,
+      tag: mirroredTag,
+      child: PopScope(
       canPop: !_hasLayer,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _closeTopLayer();
@@ -352,7 +357,17 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
           ),
         ),
       ),
+    ),
     );
+  }
+
+  /// The main screen state for the open layer: apartment details, floor details (also with the
+  /// panel collapsed), building details, or the bare exterior when the building panel is collapsed.
+  (String, String?) get _mirroredState {
+    if (_apartment != null) return ('apartment_details', _floorTypes[_apartment!]);
+    if (_floor != null) return ('floor_details', _floors[_floor!].code);
+    if (_panelOpen) return ('building_details', widget.type.type);
+    return ('exterior', null);
   }
 
   /// Fade plus a short rise for panels swapping in and out.

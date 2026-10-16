@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 
 import '../l10n/app_strings.dart';
+import '../services/player_connection.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 import '../widgets/glass_icon_button.dart';
@@ -45,7 +46,13 @@ class _BrochureScreenState extends State<BrochureScreen> {
   void initState() {
     super.initState();
     _loadAspect();
+    // The main screen shows the same brochure page while this modal is open.
+    _mirrorPage();
+    _controller.pageListenable.addListener(_mirrorPage);
   }
+
+  void _mirrorPage() => PlayerConnection.instance
+      .showModal({'kind': 'brochure', 'page': _controller.pageListenable.value});
 
   Future<void> _loadAspect() async {
     try {
@@ -61,6 +68,8 @@ class _BrochureScreenState extends State<BrochureScreen> {
 
   @override
   void dispose() {
+    _controller.pageListenable.removeListener(_mirrorPage);
+    PlayerConnection.instance.hideModal();
     _controller.dispose();
     super.dispose();
   }

@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/language_toggle.dart';
 import '../widgets/map_pin.dart';
+import '../widgets/mirror_state.dart';
 import '../widgets/overlay_background.dart';
 import 'masterplan_screen.dart';
 
@@ -39,60 +40,69 @@ class _CityContextScreenState extends State<CityContextScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Warm up the masterplan photo so it does not pop in after the tap.
-    precacheImage(const AssetImage('assets/images/masterplan/background.png'), context);
+    precacheImage(
+      const AssetImage('assets/images/masterplan/background.png'),
+      context,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
     final isArabic = strings.isArabic;
-    return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          FittedBox(
-            fit: BoxFit.cover,
-            clipBehavior: Clip.hardEdge,
-            child: SizedBox.fromSize(
-              size: _canvas,
-              child: _MapCanvas(
-                strings: strings,
-                onProjectTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => MasterplanScreen(onLocaleChanged: onLocaleChanged),
+    return MirrorState(
+      state: 'city_context',
+      child: Scaffold(
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            FittedBox(
+              fit: BoxFit.cover,
+              clipBehavior: Clip.hardEdge,
+              child: SizedBox.fromSize(
+                size: _canvas,
+                child: _MapCanvas(
+                  strings: strings,
+                  onProjectTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          MasterplanScreen(onLocaleChanged: onLocaleChanged),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          SafeArea(
-            minimum: const EdgeInsets.all(32),
-            child: Align(
-              alignment: Alignment.topCenter,
-              // Row follows the ambient Directionality, so it mirrors in RTL.
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GlassIconButton(
-                    size: 48,
-                    tooltip: strings.back,
-                    onPressed: () => Navigator.of(context).maybePop(),
-                    child: Transform.flip(
-                      flipX: isArabic,
-                      child: SvgPicture.asset('$_assets/arrow_left.svg'),
+            SafeArea(
+              minimum: const EdgeInsets.all(32),
+              child: Align(
+                alignment: Alignment.topCenter,
+                // Row follows the ambient Directionality, so it mirrors in RTL.
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GlassIconButton(
+                      size: 48,
+                      tooltip: strings.back,
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      child: Transform.flip(
+                        flipX: isArabic,
+                        child: SvgPicture.asset('$_assets/arrow_left.svg'),
+                      ),
                     ),
-                  ),
-                  LanguageToggle(
-                    selected: isArabic ? AppLanguage.arabic : AppLanguage.english,
-                    onChanged: (language) => onLocaleChanged(
-                      Locale(language == AppLanguage.arabic ? 'ar' : 'en'),
+                    LanguageToggle(
+                      selected: isArabic
+                          ? AppLanguage.arabic
+                          : AppLanguage.english,
+                      onChanged: (language) => onLocaleChanged(
+                        Locale(language == AppLanguage.arabic ? 'ar' : 'en'),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -150,46 +160,70 @@ class _MapCanvas extends StatelessWidget {
           ),
           _ProjectCallout(onTap: onProjectTap),
           MapPin(
-            markerLeft: 896, markerTop: 144, labelWidth: 178,
-            label: strings.kingSalmanAirport, isArabic: isArabic,
+            markerLeft: 896,
+            markerTop: 144,
+            labelWidth: 178,
+            label: strings.kingSalmanAirport,
+            isArabic: isArabic,
             icon: _glyph('icon_tree.svg'),
           ),
           MapPin(
-            markerLeft: 1082, markerTop: 160, labelWidth: 147,
+            markerLeft: 1082,
+            markerTop: 160,
+            labelWidth: 147,
             labelSide: PinLabelSide.right,
-            label: strings.equestrianClub, isArabic: isArabic,
+            label: strings.equestrianClub,
+            isArabic: isArabic,
             icon: _glyph('icon_equestrian.svg', top: 1.908),
           ),
           MapPin(
-            markerLeft: 1184, markerTop: 299, labelWidth: 159,
-            label: strings.horseRacingTrack, isArabic: isArabic,
+            markerLeft: 1184,
+            markerTop: 299,
+            labelWidth: 159,
+            label: strings.horseRacingTrack,
+            isArabic: isArabic,
             icon: _glyph('icon_horse_racing.svg', top: 0.99),
           ),
           MapPin(
-            markerLeft: 863, markerTop: 293, labelWidth: 179,
-            label: strings.kingKhalidAirport, isArabic: isArabic,
+            markerLeft: 863,
+            markerTop: 293,
+            labelWidth: 179,
+            label: strings.kingKhalidAirport,
+            isArabic: isArabic,
             icon: _glyph('icon_tree.svg'),
           ),
           MapPin(
-            markerLeft: 582, markerTop: 416, labelWidth: 141,
+            markerLeft: 582,
+            markerTop: 416,
+            labelWidth: 141,
             labelSide: PinLabelSide.right,
-            label: strings.khuzamDistrict, isArabic: isArabic,
+            label: strings.khuzamDistrict,
+            isArabic: isArabic,
             icon: _graduationCap(),
           ),
           MapPin(
-            markerLeft: 929, markerTop: 545, labelWidth: 150,
-            label: strings.expo2030, isArabic: isArabic,
+            markerLeft: 929,
+            markerTop: 545,
+            labelWidth: 150,
+            label: strings.expo2030,
+            isArabic: isArabic,
             icon: const _ExpoGlyph(),
           ),
           MapPin(
-            markerLeft: 991, markerTop: 667, labelWidth: 184,
+            markerLeft: 991,
+            markerTop: 667,
+            labelWidth: 184,
             labelSide: PinLabelSide.right,
-            label: strings.princessNourahUniversity, isArabic: isArabic,
+            label: strings.princessNourahUniversity,
+            isArabic: isArabic,
             icon: _graduationCap(),
           ),
           MapPin(
-            markerLeft: 919, markerTop: 784, labelWidth: 181,
-            label: strings.imamUniversity, isArabic: isArabic,
+            markerLeft: 919,
+            markerTop: 784,
+            labelWidth: 181,
+            label: strings.imamUniversity,
+            isArabic: isArabic,
             icon: _graduationCap(),
           ),
         ],
@@ -199,22 +233,22 @@ class _MapCanvas extends StatelessWidget {
 
   /// Glyph SVG at its natural size, [top] px from the top of the 24x24 slot.
   static Widget _glyph(String name, {double top = 0}) => Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(top: top, left: 0, child: SvgPicture.asset('$_assets/$name')),
-        ],
-      );
+    clipBehavior: Clip.none,
+    children: [
+      Positioned(top: top, left: 0, child: SvgPicture.asset('$_assets/$name')),
+    ],
+  );
 
   static Widget _graduationCap() => Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: 1.472,
-            top: 5.642,
-            child: SvgPicture.asset('$_assets/icon_graduation.svg'),
-          ),
-        ],
-      );
+    clipBehavior: Clip.none,
+    children: [
+      Positioned(
+        left: 1.472,
+        top: 5.642,
+        child: SvgPicture.asset('$_assets/icon_graduation.svg'),
+      ),
+    ],
+  );
 }
 
 /// Outline of `site_polygon.png` (traced on its 374x503 pixels), so only taps
@@ -224,14 +258,25 @@ class _SitePolygonClipper extends CustomClipper<Path> {
 
   static const _image = Size(374, 503);
   static const _points = [
-    Offset(97, 45), Offset(262, 3), Offset(281, 22), Offset(362, 225), Offset(195, 497),
-    Offset(176, 497), Offset(6, 318), Offset(122, 163), Offset(92, 73),
+    Offset(97, 45),
+    Offset(262, 3),
+    Offset(281, 22),
+    Offset(362, 225),
+    Offset(195, 497),
+    Offset(176, 497),
+    Offset(6, 318),
+    Offset(122, 163),
+    Offset(92, 73),
   ];
 
   @override
   Path getClip(Size size) => Path()
     ..addPolygon([
-      for (final p in _points) Offset(p.dx * size.width / _image.width, p.dy * size.height / _image.height),
+      for (final p in _points)
+        Offset(
+          p.dx * size.width / _image.width,
+          p.dy * size.height / _image.height,
+        ),
     ], true);
 
   @override
@@ -267,7 +312,9 @@ class _ProjectCallout extends StatelessWidget {
         Positioned(
           left: 1359,
           top: 302.5,
-          child: IgnorePointer(child: SvgPicture.asset('$_assets/callout_dot.svg')),
+          child: IgnorePointer(
+            child: SvgPicture.asset('$_assets/callout_dot.svg'),
+          ),
         ),
         Positioned(
           left: 1481,
@@ -283,7 +330,9 @@ class _ProjectCallout extends StatelessWidget {
                 color: AppColors.calloutCard,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0x29FFFFFF)),
-                boxShadow: const [BoxShadow(color: Color(0x3D000000), blurRadius: 6)],
+                boxShadow: const [
+                  BoxShadow(color: Color(0x3D000000), blurRadius: 6),
+                ],
               ),
               child: const _ProjectLogo(),
             ),
@@ -305,8 +354,17 @@ class _ProjectLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
     final style = strings.isArabic
-        ? GoogleFonts.notoSansArabic(fontSize: 18, height: 1.1, fontWeight: FontWeight.w600, color: Colors.white)
-        : GoogleFonts.baskervville(fontSize: 19, height: 1.05, color: Colors.white);
+        ? GoogleFonts.notoSansArabic(
+            fontSize: 18,
+            height: 1.1,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          )
+        : GoogleFonts.baskervville(
+            fontSize: 19,
+            height: 1.05,
+            color: Colors.white,
+          );
     return SizedBox(
       width: 101.93,
       height: 40,
