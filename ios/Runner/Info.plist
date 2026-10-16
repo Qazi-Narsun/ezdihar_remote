@@ -35,6 +35,10 @@
 	</array>
 	<key>UIRequiresFullScreen</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Scan the QR code on the main screen to connect to it.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Connect to the main screen on this network.</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationLandscapeLeft</string>

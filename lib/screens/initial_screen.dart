@@ -7,6 +7,7 @@ import 'city_context_screen.dart';
 import '../widgets/language_toggle.dart';
 import '../widgets/overlay_background.dart';
 import '../widgets/pill_button.dart';
+import '../widgets/screen_link_button.dart';
 
 class InitialScreen extends StatelessWidget {
   const InitialScreen({
@@ -42,13 +43,19 @@ class InitialScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     SvgPicture.asset('assets/images/logo.svg'),
-                    LanguageToggle(
-                      selected: strings.isArabic
-                          ? AppLanguage.arabic
-                          : AppLanguage.english,
-                      onChanged: (language) => onLocaleChanged(
-                        Locale(language == AppLanguage.arabic ? 'ar' : 'en'),
-                      ),
+                    Row(
+                      children: [
+                        const ScreenLinkButton(),
+                        const SizedBox(width: 16),
+                        LanguageToggle(
+                          selected: strings.isArabic
+                              ? AppLanguage.arabic
+                              : AppLanguage.english,
+                          onChanged: (language) => onLocaleChanged(
+                            Locale(language == AppLanguage.arabic ? 'ar' : 'en'),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
