@@ -137,6 +137,15 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
   - Background visibility: initial screen tint is a radial gradient (64% -> 25%), city map
     edge darkening 80% -> 56%, modal scrim 80% -> 64%. `AppColors.textSecondary` (white @ 72%)
     replaces white @ 64% for secondary text.
+- Main screen link (NarsunPlayer, `ezdhar_main` branch of Qazi-Narsun/NarsunPlayer): the player shows a QR
+  of its WebSocket URL (`ws://<lan-ip>:3737/`) on the main screen while no remote is connected (it accepts
+  one remote at a time). `PlayerConnection` (`lib/services/player_connection.dart`, app-wide
+  `PlayerConnection.instance`, loaded in `main()`) saves the paired URL in `shared_preferences` and
+  reconnects on its own (1..30s backoff); `send(event, payload)` writes the player's
+  `{"Event": ..., "Payload": ...}` JSON (player events: `StartExperience {id}`, `StartState {id}`,
+  `GetCurrentExperience`, `GetCurrentState`). `ScreenLinkButton` (initial screen, next to the language
+  toggle) shows the link state and opens `PairScreen` (`mobile_scanner` camera, accepts only `ws://host:port`
+  codes). Nothing drives the player's videos yet. Android needs INTERNET/CAMERA and cleartext traffic.
 - `RotatingView` (`lib/widgets/rotating_view.dart`) is the shared slide/zoom
   stand-in for 360 frames. `GlassIconButton` takes `padding` for a pill with
   icon + label.

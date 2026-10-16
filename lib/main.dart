@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_strings.dart';
 import 'l10n/locale_controller.dart';
 import 'screens/initial_screen.dart';
+import 'services/player_connection.dart';
 import 'services/ui_feedback.dart';
 import 'widgets/app_canvas.dart';
 import 'widgets/directional_page_transitions.dart';
@@ -20,6 +21,7 @@ Future<void> main() async {
   ]);
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   UiFeedback.init(); // pre-load interaction sounds; never blocks startup
+  await PlayerConnection.load(); // reconnects to the paired main screen, if any
   runApp(MyApp(localeController: await LocaleController.load()));
 }
 

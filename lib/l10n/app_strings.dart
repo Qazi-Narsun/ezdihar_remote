@@ -98,6 +98,14 @@ class AppStrings {
     'size': 'Size',
     'available': 'Available',
     'unavailable': 'Not Available',
+    'connectScreen': 'Connect screen',
+    'screenConnected': 'Screen connected',
+    'screenConnecting': 'Connecting…',
+    'screenOffline': 'Screen offline',
+    'scanScreenCode': 'Scan the code on the screen',
+    'scanScreenCodeHint': 'The QR code shows on the main screen while no remote is connected',
+    'notScreenCode': 'This is not an Ezdihar screen code',
+    'cameraError': 'The camera is not available',
   };
 
   static const _ar = {
@@ -187,6 +195,14 @@ class AppStrings {
     'size': 'المساحة',
     'available': 'متاحة',
     'unavailable': 'غير متاحة',
+    'connectScreen': 'ربط الشاشة',
+    'screenConnected': 'الشاشة متصلة',
+    'screenConnecting': 'جارٍ الاتصال…',
+    'screenOffline': 'الشاشة غير متصلة',
+    'scanScreenCode': 'امسح الرمز الظاهر على الشاشة',
+    'scanScreenCodeHint': 'يظهر رمز QR على الشاشة الرئيسية عندما لا يكون هناك جهاز تحكم متصل',
+    'notScreenCode': 'هذا الرمز ليس رمز شاشة إزدهار',
+    'cameraError': 'الكاميرا غير متاحة',
   };
 
   static AppStrings of(BuildContext context) =>
@@ -274,6 +290,14 @@ class AppStrings {
   String get size => _values['size']!;
   String get available => _values['available']!;
   String get unavailable => _values['unavailable']!;
+  String get connectScreen => _values['connectScreen']!;
+  String get screenConnected => _values['screenConnected']!;
+  String get screenConnecting => _values['screenConnecting']!;
+  String get screenOffline => _values['screenOffline']!;
+  String get scanScreenCode => _values['scanScreenCode']!;
+  String get scanScreenCodeHint => _values['scanScreenCodeHint']!;
+  String get notScreenCode => _values['notScreenCode']!;
+  String get cameraError => _values['cameraError']!;
 
   /// Floor name in the project sheet's convention: English uses the sheet
   /// code as is ("GF", "1F".."6F"); Arabic uses the same short form
