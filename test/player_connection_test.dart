@@ -35,9 +35,13 @@ void main() {
     await connection.connect(Uri.parse('ws://127.0.0.1:${server.port}/'));
     await statusIs(PlayerStatus.connected).timeout(const Duration(seconds: 5));
 
-    final messages = received.stream.asBroadcastStream();
+    final messages = StreamIterator(received.stream);
+    // On connect the app resyncs the main screen (no state mirrored yet, so just "no modal").
+    expect(await messages.moveNext(), isTrue);
+    expect(jsonDecode(messages.current), {'Event': 'HideModal', 'Payload': null});
     connection.send('StartState', {'id': 'intro'});
-    expect(jsonDecode(await messages.first), {'Event': 'StartState', 'Payload': {'id': 'intro'}});
+    expect(await messages.moveNext(), isTrue);
+    expect(jsonDecode(messages.current), {'Event': 'StartState', 'Payload': {'id': 'intro'}});
 
     final fromPlayer = connection.messages.first;
     sockets.last.add(jsonEncode({'Event': 'StateStarted', 'Payload': {'CurrentState': 'intro'}}));

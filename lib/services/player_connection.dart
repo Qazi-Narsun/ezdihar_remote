@@ -70,6 +70,48 @@ class PlayerConnection extends ChangeNotifier {
     await _open();
   }
 
+  /// The player experience whose states mirror this app's screens.
+  static const experience = 'ezdihar';
+
+  Map<String, Object?>? _state;
+  Map<String, Object?>? _modal;
+
+  /// The last mirrored `StartState` payload and the open modal (null when none).
+  Map<String, Object?>? get mirroredState => _state;
+  Map<String, Object?>? get mirroredModal => _modal;
+
+  /// Shows [id] (with an optional [tag], e.g. a floor code) on the main screen. Repeats are
+  /// dropped; a new state also closes any modal, since modals belong to the screen they opened on.
+  /// Re-sent after every reconnect.
+  void mirrorState(String id, {String? tag}) {
+    final state = {'id': id, 'experience': experience, 'tag': ?tag};
+    if (_state != null && jsonEncode(_state) == jsonEncode(state)) return;
+    if (_state?['id'] != id) hideModal();
+    _state = state;
+    send('StartState', state);
+  }
+
+  /// Opens (or updates) the main screen's modal: `{'kind': 'gallery', 'id': ...}` or
+  /// `{'kind': 'brochure', 'page': n}`.
+  void showModal(Map<String, Object?> modal) {
+    if (_modal != null && jsonEncode(_modal) == jsonEncode(modal)) return;
+    _modal = modal;
+    send('ShowModal', modal);
+  }
+
+  /// Closes the main screen's modal, if one is open.
+  void hideModal() {
+    if (_modal == null) return;
+    _modal = null;
+    send('HideModal');
+  }
+
+  /// Brings a (re)connected player to this app's current state and modal.
+  void _resync() {
+    if (_state != null) send('StartState', _state);
+    _modal == null ? send('HideModal') : send('ShowModal', _modal);
+  }
+
   /// Sends an event in the player's format; dropped while not connected.
   void send(String event, [Object? payload]) {
     if (_status != PlayerStatus.connected) return;
@@ -104,6 +146,7 @@ class PlayerConnection extends ChangeNotifier {
       cancelOnError: true,
     );
     _setStatus(PlayerStatus.connected);
+    _resync();
   }
 
   void _onData(dynamic data) {
