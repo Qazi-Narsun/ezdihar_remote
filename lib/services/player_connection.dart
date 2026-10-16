@@ -80,11 +80,12 @@ class PlayerConnection extends ChangeNotifier {
   Map<String, Object?>? get mirroredState => _state;
   Map<String, Object?>? get mirroredModal => _modal;
 
-  /// Shows [id] (with an optional [tag], e.g. a floor code) on the main screen. Repeats are
-  /// dropped; a new state also closes any modal, since modals belong to the screen they opened on.
-  /// Re-sent after every reconnect.
-  void mirrorState(String id, {String? tag}) {
-    final state = {'id': id, 'experience': experience, 'tag': ?tag};
+  /// Shows [id] (with an optional [tag], e.g. a floor code) on the main screen. [details] carry
+  /// what the screen shows (`building`, `buildingType`, `floor`, `floorNumber`, `apartmentType`),
+  /// so the player can pick media made for it. Repeats are dropped; a new state also closes any
+  /// modal, since modals belong to the screen they opened on. Re-sent after every reconnect.
+  void mirrorState(String id, {String? tag, Map<String, Object?>? details}) {
+    final state = {'id': id, 'experience': experience, 'tag': ?tag, if (details != null && details.isNotEmpty) 'details': details};
     if (_state != null && jsonEncode(_state) == jsonEncode(state)) return;
     if (_state?['id'] != id) hideModal();
     _state = state;

@@ -21,10 +21,20 @@ void main() {
 
     connection.showModal({'kind': 'gallery', 'id': 'gallery_1'});
     navigator.currentState!.push(MaterialPageRoute<void>(
-      builder: (_) => const MirrorState(state: 'floor_details', tag: '3F', child: SizedBox()),
+      builder: (_) => const MirrorState(
+        state: 'floor_details',
+        tag: '3F',
+        details: {'building': 'B07', 'buildingType': 'B', 'floor': '3F', 'floorNumber': 3},
+        child: SizedBox(),
+      ),
     ));
     await tester.pumpAndSettle();
-    expect(connection.mirroredState, {'id': 'floor_details', 'experience': 'ezdihar', 'tag': '3F'});
+    expect(connection.mirroredState, {
+      'id': 'floor_details',
+      'experience': 'ezdihar',
+      'tag': '3F',
+      'details': {'building': 'B07', 'buildingType': 'B', 'floor': '3F', 'floorNumber': 3},
+    });
     expect(connection.mirroredModal, isNull, reason: 'a new state closes the modal');
 
     // A screen without MirrorState (e.g. the register form) leaves the state alone.
@@ -67,11 +77,13 @@ void main() {
     expect(await next(), {'Event': 'HideModal', 'Payload': null});
 
     connection.mirrorState('splash'); // repeat: dropped
-    connection.mirrorState('apartment_details', tag: '2BR');
+    const details = {'building': 'A03', 'buildingType': 'A', 'floor': '3F', 'floorNumber': 3, 'apartmentType': '2BR'};
+    connection.mirrorState('apartment_details', tag: '2BR', details: details);
     expect(await next(), {
       'Event': 'StartState',
-      'Payload': {'id': 'apartment_details', 'experience': 'ezdihar', 'tag': '2BR'},
+      'Payload': {'id': 'apartment_details', 'experience': 'ezdihar', 'tag': '2BR', 'details': details},
     });
+    connection.mirrorState('apartment_details', tag: '2BR', details: {...details}); // same: dropped
 
     connection.showModal({'kind': 'brochure', 'page': 1});
     connection.showModal({'kind': 'brochure', 'page': 1}); // repeat: dropped
@@ -82,7 +94,7 @@ void main() {
     await sockets.last.close();
     await statusIs(PlayerStatus.disconnected).timeout(const Duration(seconds: 5));
     await statusIs(PlayerStatus.connected).timeout(const Duration(seconds: 5));
-    expect((await next())['Payload'], {'id': 'apartment_details', 'experience': 'ezdihar', 'tag': '2BR'});
+    expect((await next())['Payload'], {'id': 'apartment_details', 'experience': 'ezdihar', 'tag': '2BR', 'details': details});
     expect(await next(), {'Event': 'ShowModal', 'Payload': {'kind': 'brochure', 'page': 2}});
 
     connection.hideModal();
