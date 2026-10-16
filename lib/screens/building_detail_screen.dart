@@ -141,6 +141,7 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
     return MirrorState(
       state: mirrored,
       tag: mirroredTag,
+      details: _mirroredDetails,
       child: PopScope(
       canPop: !_hasLayer,
       onPopInvokedWithResult: (didPop, _) {
@@ -368,6 +369,17 @@ class _BuildingDetailScreenState extends State<BuildingDetailScreen> {
     if (_floor != null) return ('floor_details', _floors[_floor!].code);
     if (_panelOpen) return ('building_details', widget.type.type);
     return ('exterior', null);
+  }
+
+  /// Everything selected so far, so the main screen can play media made for it.
+  Map<String, Object?> get _mirroredDetails {
+    final floor = _floor == null ? null : _floors[_floor!];
+    return {
+      'building': widget.buildingId,
+      'buildingType': widget.type.type,
+      if (floor != null) ...{'floor': floor.code, 'floorNumber': floor.level},
+      if (_apartment != null) 'apartmentType': _floorTypes[_apartment!],
+    };
   }
 
   /// Fade plus a short rise for panels swapping in and out.

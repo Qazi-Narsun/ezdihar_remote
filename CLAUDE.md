@@ -153,7 +153,10 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
   while its route is on top, and again when the route above pops. States: `splash` (initial),
   `city_context`, `masterplan`, and on the building screen `building_details` (tag = building type),
   `floor_details` (tag = floor code, also with the panel collapsed), `apartment_details` (tag = unit
-  type), `exterior` (building panel collapsed). The register form and thank-you screen have no
+  type), `exterior` (building panel collapsed). The building screen's states also send `details`
+  (`building` id, `buildingType`, plus `floor` code + `floorNumber` once a floor is selected and
+  `apartmentType` once an apartment is), which the player uses to pick media made for them (each
+  state's `match` keys in its config: nested folders, deepest one with media wins). The register form and thank-you screen have no
   MirrorState, so the main screen keeps the previous state. Modals: a gallery tile tap sends
   `ShowModal {kind: gallery, id: gallery_N}`, closing/leaving the gallery sends `HideModal`; the
   brochure sends `ShowModal {kind: brochure, page}` on open and every page change, `HideModal` on
