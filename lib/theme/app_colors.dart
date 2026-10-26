@@ -15,6 +15,18 @@ abstract final class AppColors {
   static const mapLabelText = Color(0xFFE0E0E0);
   static const calloutCard = Color(0xFF4C231A);
 
+  /// City map landmark tile (brown @ 64%) and its inner square.
+  static const mapTile = Color(0xA3402817);
+  static const mapTileInner = Color(0xFF925C34);
+
+  /// Hairline border on panels and cards (white @ 16%), also the round fill
+  /// behind the landmark card's X.
+  static const panelBorder = Color(0x29FFFFFF);
+
+  /// Landmark card text block and the highlighted "Next" button.
+  static const landmarkInfo = Color(0xFF623D23);
+  static const accentDark = Color(0xFFA96A3D);
+
   /// Inset cards inside glass panels (black @ 16%) and their input fields (24%).
   static const panelCard = Color(0x29000000);
   static const panelField = Color(0x3D000000);

@@ -114,6 +114,14 @@ class AppStrings {
     'tryAgain': 'Try again',
     'notScreenCode': 'This is not an Ezdihar screen code',
     'cameraError': 'The camera is not available',
+    'previousLandmark': 'Previous',
+    'nextLandmark': 'Next',
+    'landmarkDistance': '{km} km · {min} min',
+    // Placeholder copy from Figma (401:2), shown for every landmark until the real texts arrive.
+    'landmarkDescription':
+        'King Khalid International Airport (RUH) is Riyadh’s main international gateway, connecting the city to '
+        'major regional and global destinations. offering convenient access for residents, visitors, and business '
+        'travelers.',
   };
 
   static const _ar = {
@@ -219,6 +227,12 @@ class AppStrings {
     'tryAgain': 'حاول مرة أخرى',
     'notScreenCode': 'هذا الرمز ليس رمز شاشة إزدهار',
     'cameraError': 'الكاميرا غير متاحة',
+    'previousLandmark': 'السابق',
+    'nextLandmark': 'التالي',
+    'landmarkDistance': '{km} كم · {min} دقيقة',
+    'landmarkDescription':
+        'مطار الملك خالد الدولي (RUH) هو البوابة الدولية الرئيسية للرياض، يربط المدينة بأهم الوجهات الإقليمية '
+        'والعالمية، ويوفر وصولاً سهلاً للسكان والزوار ورجال الأعمال.',
   };
 
   static AppStrings of(BuildContext context) =>
@@ -322,6 +336,11 @@ class AppStrings {
   String get tryAgain => _values['tryAgain']!;
   String get notScreenCode => _values['notScreenCode']!;
   String get cameraError => _values['cameraError']!;
+  String get previousLandmark => _values['previousLandmark']!;
+  String get nextLandmark => _values['nextLandmark']!;
+  String get landmarkDescription => _values['landmarkDescription']!;
+  String landmarkDistance(int km, int minutes) =>
+      _values['landmarkDistance']!.replaceAll('{km}', '$km').replaceAll('{min}', '$minutes');
 
   /// Floor name in the project sheet's convention: English uses the sheet
   /// code as is ("GF", "1F".."6F"); Arabic uses the same short form
