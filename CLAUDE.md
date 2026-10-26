@@ -171,7 +171,7 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
   brochure sends `ShowModal {kind: brochure, page}` on open and every page change, `HideModal` on
   close; an open city landmark sends `ShowModal {kind: landmark, id, title, description, metadata,
   locale}` (the card's texts in the current language, re-sent on language change; the player shows
-  `Landmarks/<id>` full screen, text centred at the bottom, metadata top-end, laid out RTL for `ar`),
+  `Landmarks/<id>` in the gallery modal's frame, text centred at its bottom, metadata top-end, RTL for `ar`),
   `HideModal` on close. A new state also closes the modal. `PlayerConnection` drops repeats and resends the state
   + modal on every (re)connect. New screens/panels: wrap them in `MirrorState` and add the state to
   the player's `Assets/Experiences/ezdihar/config.json`.
