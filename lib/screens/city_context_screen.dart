@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../l10n/app_strings.dart';
+import '../services/player_connection.dart';
 import '../services/ui_feedback.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
@@ -62,7 +63,31 @@ class _CityContextScreenState extends State<CityContextScreen> {
 
   void _select(int? index) {
     if (index != null) precacheImage(AssetImage(_landmarks[index].image), context);
+    if (index == null && _selected != null) PlayerConnection.instance.hideModal();
     setState(() => _selected = index);
+  }
+
+  /// The main screen shows the open landmark as a modal over `city_context`, with the
+  /// card's texts in the current language. Called after every build, so a language
+  /// change updates it; repeats are dropped by [PlayerConnection.showModal].
+  void _mirrorLandmark(AppStrings strings) {
+    final index = _selected;
+    if (!mounted || index == null) return;
+    final landmark = _landmarks[index];
+    PlayerConnection.instance.showModal({
+      'kind': 'landmark',
+      'id': landmark.id,
+      'title': landmark.name(strings).trim(),
+      'description': strings.landmarkDescription,
+      'metadata': strings.landmarkDistance(landmark.km, landmark.minutes),
+      'locale': strings.locale.languageCode,
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_selected != null) PlayerConnection.instance.hideModal();
+    super.dispose();
   }
 
   /// Previous (-1) / next (+1) landmark, wrapping around.
@@ -77,10 +102,9 @@ class _CityContextScreenState extends State<CityContextScreen> {
     final strings = AppStrings.of(context);
     final isArabic = strings.isArabic;
     final selected = _selected == null ? null : _landmarks[_selected!];
+    if (selected != null) WidgetsBinding.instance.addPostFrameCallback((_) => _mirrorLandmark(strings));
     return MirrorState(
-      state: selected == null ? 'city_context' : 'city_landmark',
-      tag: selected?.id,
-      details: selected == null ? null : {'landmark': selected.id},
+      state: 'city_context',
       child: PopScope(
         canPop: selected == null,
         onPopInvokedWithResult: (didPop, _) {
@@ -198,7 +222,7 @@ class _Landmark {
     this.labelSide = PinLabelSide.left,
   });
 
-  /// Also the photo's file name and the main screen's `city_landmark` tag.
+  /// Also the photo's file name and the main screen's landmark modal id.
   final String id;
   final String Function(AppStrings) name;
 

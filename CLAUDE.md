@@ -160,7 +160,7 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
   video, then holds on its hero image). `MirrorState(state:, tag:)` (`lib/widgets/mirror_state.dart`,
   its `routeObserver` is on `MaterialApp.navigatorObservers`) sends `StartState {id, experience, tag}`
   while its route is on top, and again when the route above pops. States: `splash` (initial),
-  `city_context`, `city_landmark` (a landmark open; tag = landmark id, `details {landmark}`), `masterplan`, and on the building screen `building_details` (tag = building type),
+  `city_context`, `masterplan`, and on the building screen `building_details` (tag = building type),
   `floor_details` (tag = floor code, also with the panel collapsed), `apartment_details` (tag = unit
   type), `exterior` (building panel collapsed). The building screen's states also send `details`
   (`building` id, `buildingType`, plus `floor` code + `floorNumber` once a floor is selected and
@@ -169,7 +169,10 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
   MirrorState, so the main screen keeps the previous state. Modals: a gallery tile tap sends
   `ShowModal {kind: gallery, id: gallery_N}`, closing/leaving the gallery sends `HideModal`; the
   brochure sends `ShowModal {kind: brochure, page}` on open and every page change, `HideModal` on
-  close. A new state also closes the modal. `PlayerConnection` drops repeats and resends the state
+  close; an open city landmark sends `ShowModal {kind: landmark, id, title, description, metadata,
+  locale}` (the card's texts in the current language, re-sent on language change; the player shows
+  `Landmarks/<id>` full screen, text centred at the bottom, metadata top-end, laid out RTL for `ar`),
+  `HideModal` on close. A new state also closes the modal. `PlayerConnection` drops repeats and resends the state
   + modal on every (re)connect. New screens/panels: wrap them in `MirrorState` and add the state to
   the player's `Assets/Experiences/ezdihar/config.json`.
 - `RotatingView` (`lib/widgets/rotating_view.dart`) is the shared slide/zoom

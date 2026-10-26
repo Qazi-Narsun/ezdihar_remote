@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ezdihar_remote/l10n/app_strings.dart';
 import 'package:ezdihar_remote/screens/city_context_screen.dart';
 import 'package:ezdihar_remote/screens/masterplan_screen.dart';
+import 'package:ezdihar_remote/services/player_connection.dart';
 import 'package:ezdihar_remote/widgets/app_canvas.dart';
 
 void main() {
@@ -92,6 +93,29 @@ void main() {
     expect(handled, isTrue);
     expect(landmarkPhoto('expo_2030'), findsNothing);
     expect(find.byType(CityContextScreen), findsOneWidget);
+  });
+
+  testWidgets('an open landmark is mirrored as a modal over city_context', (tester) async {
+    final connection = PlayerConnection.instance;
+    await pumpCity(tester);
+    await tester.tap(find.text('Expo 2030 Riyadh'));
+    await settle(tester);
+    expect(connection.mirroredModal, {
+      'kind': 'landmark',
+      'id': 'expo_2030',
+      'title': 'Expo 2030 Riyadh',
+      'description': startsWith('King Khalid'),
+      'metadata': '28 km · 26 min',
+      'locale': 'en',
+    });
+
+    await tester.tap(find.text('Next'));
+    await settle(tester);
+    expect(connection.mirroredModal?['id'], 'princess_nourah_university');
+
+    await tester.tap(find.byTooltip('Close'));
+    await settle(tester);
+    expect(connection.mirroredModal, isNull);
   });
 
   testWidgets('tapping the map just outside the site does nothing', (tester) async {
