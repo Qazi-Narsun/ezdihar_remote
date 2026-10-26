@@ -62,7 +62,8 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
   RangeValues? _surfaceRange;
   bool _hideUnavailable = false;
   final Set<String> _buildingTypes = {};
-  int _selectedImage = 0;
+  /// The gallery tile shown on the main screen; null until one is tapped.
+  int? _selectedImage;
 
   List<BuildingType> _types = const [];
 
@@ -200,6 +201,8 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
   void _openBuilding(BuildingType type, String id) {
     _dismissHint();
     _view.currentState?.resetZoom();
+    // The building's state closes the gallery modal on the main screen.
+    setState(() => _selectedImage = null);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => BuildingDetailScreen(
@@ -219,8 +222,12 @@ class _MasterplanScreenState extends State<MasterplanScreen> {
 
   /// Opens [panel] (null closes). Leaving the gallery closes its modal on the main screen.
   void _setPanel(_MasterplanPanel? panel) {
-    if (panel != _MasterplanPanel.gallery) PlayerConnection.instance.hideModal();
-    setState(() => _panel = panel);
+    final leavingGallery = panel != _MasterplanPanel.gallery;
+    if (leavingGallery) PlayerConnection.instance.hideModal();
+    setState(() {
+      _panel = panel;
+      if (leavingGallery) _selectedImage = null;
+    });
   }
 
   /// Rotate buttons and arrow keys: back to 1x, then turn.
