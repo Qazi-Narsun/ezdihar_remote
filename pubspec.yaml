@@ -70,6 +70,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/city/
+    - assets/images/city/landmarks/
     - assets/images/masterplan/
     - assets/images/building/
     - assets/images/apartments/

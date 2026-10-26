@@ -37,10 +37,19 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
 - `lib/screens/` one file per screen. `lib/widgets/` reusable pieces.
   `lib/theme/app_colors.dart` colour tokens. `lib/l10n/app_strings.dart` strings.
 - Reusable: `OverlayBackground` (image + tint/gradient), `PillButton`,
-  `LanguageToggle`, `GlassIconButton`, `BrandTitle`, `MapPin`.
+  `LanguageToggle`, `GlassIconButton` (optional `color` fill), `BrandTitle`, `MapPin`, `MapTile`.
 - Flow: `InitialScreen` -> (Start Journey, `Navigator.push`) -> `CityContextScreen`
   -> (tap project logo card or the highlighted site polygon, hit-tested on its outline via
   `_SitePolygonClipper`) -> `MasterplanScreen`; back button pops.
+- City context landmarks (Figma 401:2 .. 401:2018, one frame per landmark): the 8 landmarks
+  (`_landmarks`, in the frames' order) are `MapTile`s (square tile + name box). Tapping one opens
+  its state: the whole screen dims and blurs (`AppColors.scrim` + vignette), the landmark is
+  drawn as a `MapPin` centred on its tile, `_LandmarkCard` (photo, name, distance, description)
+  sits bottom-start and Previous / Next (bottom-end, arrow keys too) cycle the landmarks with
+  wrap-around. X, a tap on the dimmed map, Back (`PopScope`) or Esc close it. Photos are
+  `assets/images/city/landmarks/<id>.jpg`; the distance (28 km / 26 min) and description are
+  Figma placeholders shared by every landmark (`_Landmark.km/minutes`,
+  `AppStrings.landmarkDescription`).
 - `MasterplanScreen` (Figma 24:1403 + Filters 49:5630 + Gallery 49:6205): bottom nav
   = Filters|Gallery tabs; rotate-left / rotate-right buttons sit at the screen sides,
   vertically centred (Figma 225:542 / 225:526, as on the building screen). Tabs are mutually exclusive
@@ -151,7 +160,7 @@ screen is identical and text does not overlap at 1280x800 / 1920x1200 / 2560x160
   video, then holds on its hero image). `MirrorState(state:, tag:)` (`lib/widgets/mirror_state.dart`,
   its `routeObserver` is on `MaterialApp.navigatorObservers`) sends `StartState {id, experience, tag}`
   while its route is on top, and again when the route above pops. States: `splash` (initial),
-  `city_context`, `masterplan`, and on the building screen `building_details` (tag = building type),
+  `city_context`, `city_landmark` (a landmark open; tag = landmark id, `details {landmark}`), `masterplan`, and on the building screen `building_details` (tag = building type),
   `floor_details` (tag = floor code, also with the panel collapsed), `apartment_details` (tag = unit
   type), `exterior` (building panel collapsed). The building screen's states also send `details`
   (`building` id, `buildingType`, plus `floor` code + `floorNumber` once a floor is selected and

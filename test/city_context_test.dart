@@ -41,6 +41,59 @@ void main() {
     expect(find.byType(MasterplanScreen), findsOneWidget);
   });
 
+  Finder landmarkPhoto(String id) => find.byWidgetPredicate(
+    (w) => w is Image && w.image is AssetImage && (w.image as AssetImage).assetName.endsWith('landmarks/$id.jpg'),
+  );
+
+  Future<void> settle(WidgetTester tester) async {
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+  }
+
+  testWidgets('a landmark tile opens its card; Next / Previous step through the landmarks', (tester) async {
+    await pumpCity(tester);
+    expect(find.text('Previous'), findsNothing);
+
+    await tester.tap(find.text('Horse Racing Track'));
+    await settle(tester);
+    expect(landmarkPhoto('horse_racing_track'), findsOneWidget);
+    expect(find.text('Previous'), findsOneWidget);
+
+    await tester.tap(find.text('Next'));
+    await settle(tester);
+    expect(landmarkPhoto('khuzam_district'), findsOneWidget);
+    expect(landmarkPhoto('horse_racing_track'), findsNothing);
+
+    await tester.tap(find.text('Previous'));
+    await tester.tap(find.text('Previous'));
+    await settle(tester);
+    expect(landmarkPhoto('king_khalid_airport'), findsOneWidget);
+
+    // Wraps around from the first landmark to the last.
+    await tester.tap(find.text('Previous'));
+    await tester.tap(find.text('Previous'));
+    await tester.tap(find.text('Previous'));
+    await settle(tester);
+    expect(landmarkPhoto('imam_university'), findsOneWidget);
+  });
+
+  testWidgets('X and Back close the landmark before leaving the screen', (tester) async {
+    await pumpCity(tester);
+    await tester.tap(find.text('Expo 2030 Riyadh'));
+    await settle(tester);
+    await tester.tap(find.byTooltip('Close'));
+    await settle(tester);
+    expect(landmarkPhoto('expo_2030'), findsNothing);
+
+    await tester.tap(find.text('Expo 2030 Riyadh'));
+    await settle(tester);
+    final handled = await tester.binding.handlePopRoute();
+    await settle(tester);
+    expect(handled, isTrue);
+    expect(landmarkPhoto('expo_2030'), findsNothing);
+    expect(find.byType(CityContextScreen), findsOneWidget);
+  });
+
   testWidgets('tapping the map just outside the site does nothing', (tester) async {
     final site = await pumpCity(tester);
     // Top-start corner of the image's box lies outside the polygon.

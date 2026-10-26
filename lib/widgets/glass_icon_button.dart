@@ -16,6 +16,7 @@ class GlassIconButton extends StatefulWidget {
     this.tooltip,
     this.padding,
     this.repeatEvery,
+    this.color = AppColors.glass,
   });
 
   final Widget child;
@@ -30,6 +31,9 @@ class GlassIconButton extends StatefulWidget {
   /// When set, holding the button calls [onPressed] repeatedly at this rate
   /// (hold-to-spin for the rotate buttons).
   final Duration? repeatEvery;
+
+  /// Fill behind the blur; a solid colour marks the primary button of a pair.
+  final Color color;
 
   @override
   State<GlassIconButton> createState() => _GlassIconButtonState();
@@ -75,7 +79,7 @@ class _GlassIconButtonState extends State<GlassIconButton> {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Material(
-              color: AppColors.glass,
+              color: widget.color,
               shape: RoundedRectangleBorder(
                 borderRadius: radius,
                 side: const BorderSide(color: AppColors.glassBorder, width: 0.48),
